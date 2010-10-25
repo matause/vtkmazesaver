@@ -237,19 +237,15 @@ void initMaze(std::vector<std::vector<Node*> > & maze)
 	for(int y=0; y < COLUMNS; y++)
 		for(int x=0; x < ROWS; x++)
 		{
-			std::cout << "1";
 			if(x > 0) {
 				maze[y][x]->addEdge(maze[y][x-1]);
 			}
-			std::cout << "2";
 			if(x < ROWS - 1) {
 				maze[y][x]->addEdge(maze[y][x+1]);
 			}
-			std::cout << "3";
 			if(y > 0) {
 				maze[y][x]->addEdge(maze[y-1][x]);
 			}
-			std::cout << "4\n";
 			if(y < COLUMNS - 1) {
 				maze[y][x]->addEdge(maze[y+1][x]);
 			}
@@ -341,10 +337,12 @@ renderer->AddActor	( CreatePlaneActor(mapper, texture, edges[i]->getX(), - 1 * e
     vtkSmartPointer<vtkCamera>::New();
   camera->SetPosition(0.5, -0.5, 0);
   //camera->SetFocalPoint(0.5, -1, 0);
-
-  vtkSmartPointer<KeyPressInteractorStyle> style = 
-	    vtkSmartPointer<KeyPressInteractorStyle>::New();
-  style->SetCamera(camera);
+//Keyboard Style
+//  vtkSmartPointer<KeyPressInteractorStyle> style = 
+//	    vtkSmartPointer<KeyPressInteractorStyle>::New();
+//  style->SetCamera(camera);
+  vtkSmartPointer<vtkInteractorStyleTrackballCamera> style =
+    vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
   renderWindowInteractor->SetInteractorStyle(style);
 	
   renderer->SetActiveCamera(camera);
