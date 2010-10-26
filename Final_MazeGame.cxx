@@ -64,7 +64,7 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
   private:
 	vtkSmartPointer<vtkActor> ControlActor;  //Player
 	vtkSmartPointer<vtkActor> EndActor;      //End Condition
-        vtkSmartPointer<vtkCamera> Camera;
+    vtkSmartPointer<vtkCamera> Camera;
 	vtkSmartPointer<vtkPolyData> Cube;
 	vtkSmartPointer<vtkPolyData> Sphere;
 	std::vector <vtkSmartPointer<vtkActor> > MazeBlocks;
@@ -75,59 +75,59 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
     vtkTypeMacro(KeyPressInteractorStyle, vtkInteractorStyleTrackballCamera);
     void SetControlActor(vtkSmartPointer<vtkActor> actor, vtkSmartPointer<vtkPolyData> sphereSource)
     {
-	ControlActor = actor;
-	Sphere = sphereSource;
-	VELOCITY = 0;
+        ControlActor = actor;
+        Sphere = sphereSource;
+        VELOCITY = 0;
     }
     void SetCamera(vtkSmartPointer<vtkCamera> c)
     {
-	Camera = c;
+        Camera = c;
     }
     //checks if actor is intersecting with maze or end condition
     //returns true if it is intersecting, and false otherwise
     bool isinside(vtkSmartPointer<vtkActor> actor) {
-	double * SphereBounds = ControlActor->GetBounds();
-	double Xmin = SphereBounds[0];
-	double Xmax = SphereBounds[1];
-	double Ymin = SphereBounds[2];
-	double Ymax = SphereBounds[3];
-	double * EndBounds = EndActor->GetBounds();
-	//The player has reached the end.
-	if((Xmin > EndBounds[0] && Xmin < EndBounds[1] || 
-		Xmax > EndBounds[0] && Xmax < EndBounds[1]) &&
-		(Ymin > EndBounds[2] && Ymin < EndBounds[3] ||
-		Ymax > EndBounds[2] && Ymax < EndBounds[3]))
-	{
-	  // Setup the text and add it to the window
-	vtkSmartPointer<vtkCornerAnnotation> cornerAnnotation = 
-	      vtkSmartPointer<vtkCornerAnnotation>::New();
-	cornerAnnotation->SetLinearFontScaleFactor( 2 );
-	cornerAnnotation->SetNonlinearFontScaleFactor( 1 );
-	cornerAnnotation->SetMaximumFontSize( 20 );
-	cornerAnnotation->SetText( 2, "TheEnd" );
-	cornerAnnotation->GetTextProperty()->SetColor( 1,0,0);
- 
-	this->Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->AddViewProp(cornerAnnotation);
-	ControlActor->GetProperty()->SetColor(0,1,0);
-	End = true;
-	return true;
-	}
-	//Check for collisions
-	for(int i = 0; i < MazeBlocks.size(); i++) {
-		double * CubeBounds = MazeBlocks[i]->GetBounds();
-		if((Xmin > CubeBounds[0] && Xmin < CubeBounds[1] || 
-			Xmax > CubeBounds[0] && Xmax < CubeBounds[1]) &&
-			(Ymin > CubeBounds[2] && Ymin < CubeBounds[3] ||
-			Ymax > CubeBounds[2] && Ymax < CubeBounds[3]))
-		{
-			//SPLAT - Change cube color to player color and assign a new color to player for a splat effect
-			MazeBlocks[i]->GetProperty()->SetColor(ControlActor->GetProperty()->GetColor());
-			ControlActor->GetProperty()->SetColor(vtkMath::Random(0.5,1.0),vtkMath::Random(0.5,1.0),vtkMath::Random(0.5,1.0));
-			VELOCITY = 0;
-			return true;
-		}
-	}
-	return false;
+        double * SphereBounds = ControlActor->GetBounds();
+        double Xmin = SphereBounds[0];
+        double Xmax = SphereBounds[1];
+        double Ymin = SphereBounds[2];
+        double Ymax = SphereBounds[3];
+        double * EndBounds = EndActor->GetBounds();
+        //The player has reached the end.
+        if((Xmin > EndBounds[0] && Xmin < EndBounds[1] ||
+            Xmax > EndBounds[0] && Xmax < EndBounds[1]) &&
+            (Ymin > EndBounds[2] && Ymin < EndBounds[3] ||
+            Ymax > EndBounds[2] && Ymax < EndBounds[3]))
+        {
+              // Setup the text and add it to the window
+            vtkSmartPointer<vtkCornerAnnotation> cornerAnnotation =
+                  vtkSmartPointer<vtkCornerAnnotation>::New();
+            cornerAnnotation->SetLinearFontScaleFactor( 2 );
+            cornerAnnotation->SetNonlinearFontScaleFactor( 1 );
+            cornerAnnotation->SetMaximumFontSize( 20 );
+            cornerAnnotation->SetText( 2, "TheEnd" );
+            cornerAnnotation->GetTextProperty()->SetColor( 1,0,0);
+
+            this->Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->AddViewProp(cornerAnnotation);
+            ControlActor->GetProperty()->SetColor(0,1,0);
+            End = true;
+            return true;
+        }
+        //Check for collisions
+        for(int i = 0; i < MazeBlocks.size(); i++) {
+            double * CubeBounds = MazeBlocks[i]->GetBounds();
+            if((Xmin > CubeBounds[0] && Xmin < CubeBounds[1] ||
+                Xmax > CubeBounds[0] && Xmax < CubeBounds[1]) &&
+                (Ymin > CubeBounds[2] && Ymin < CubeBounds[3] ||
+                Ymax > CubeBounds[2] && Ymax < CubeBounds[3]))
+            {
+                //SPLAT - Change cube color to player color and assign a new color to player for a splat effect
+                MazeBlocks[i]->GetProperty()->SetColor(ControlActor->GetProperty()->GetColor());
+                ControlActor->GetProperty()->SetColor(vtkMath::Random(0.5,1.0),vtkMath::Random(0.5,1.0),vtkMath::Random(0.5,1.0));
+                VELOCITY = 0;
+                return true;
+            }
+        }
+        return false;
 	}
 //Almost got collision detection working the "right" way shown in class but
 //came across issues since the polydata was coming from the source, not actor
@@ -137,7 +137,7 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
     vtkSmartPointer<vtkTransform> transform =
       vtkSmartPointer<vtkTransform>::New();
     transform->SetMatrix(MazeBlocks[i]->GetMatrix());
- 
+
     vtkSmartPointer<vtkTransformPolyDataFilter> transformPolyData =
       vtkSmartPointer<vtkTransformPolyDataFilter>::New();
     transformPolyData->SetInputConnection(polydata->GetProducerPort());
@@ -150,7 +150,7 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
 	selectEnclosedPoints->SetSurface(Sphere);
 	selectEnclosedPoints->Update();
 
- 
+
     vtkDataArray* insideArray = vtkDataArray::SafeDownCast(selectEnclosedPoints->GetOutput()->GetPointData()->GetArray(1));
 std::cout << "InsideArray:\n";
 	for(vtkIdType i = 0; i < insideArray->GetNumberOfTuples(); i++)
@@ -169,7 +169,7 @@ std::cout << "InsideArray:\n";
       }
 */
     //Handles Keypresses
-    virtual void OnKeyPress() 
+    virtual void OnKeyPress()
     {
       if(End == true)
 	return;
@@ -216,12 +216,12 @@ std::cout << "InsideArray:\n";
 	ControlActor->SetPosition(x+VELOCITY,y,z);
 */
         }
-	//If the player is colliding with something, 
+	//If the player is colliding with something,
 	if(isinside(ControlActor))
 	ControlActor->SetPosition(x,y,z);
       this->Interactor->GetRenderWindow()->Render();
     }
- 
+
 };
 vtkStandardNewMacro(KeyPressInteractorStyle);
 
@@ -234,26 +234,10 @@ void initMaze(std::vector<std::vector<Node*> > & maze)
 		for(int x=0; x < ROWS; x++)
 			maze[y].push_back(new Node(x,y));
 	}
-	for(int y=0; y < COLUMNS; y++)
-		for(int x=0; x < ROWS; x++)
-		{
-			if(x > 0) {
-				maze[y][x]->addEdge(maze[y][x-1]);
-			}
-			if(x < ROWS - 1) {
-				maze[y][x]->addEdge(maze[y][x+1]);
-			}
-			if(y > 0) {
-				maze[y][x]->addEdge(maze[y-1][x]);
-			}
-			if(y < COLUMNS - 1) {
-				maze[y][x]->addEdge(maze[y+1][x]);
-			}
-		}
 }
 
 vtkSmartPointer<vtkActor> CreatePlaneActor(vtkSmartPointer<vtkPolyDataMapper> mapper,vtkSmartPointer<vtkTexture> texture, double x, double y, double z, double rotx, double roty, double rotz, double R, double G, double B) {
-	vtkSmartPointer<vtkActor> actor = 
+	vtkSmartPointer<vtkActor> actor =
 	    vtkSmartPointer<vtkActor>::New();
 	actor->SetMapper(mapper);
 	actor->SetTexture(texture);
@@ -278,20 +262,20 @@ void printMaze(std::vector<std::vector<Node*> > & maze)
   //Create a plane
   vtkSmartPointer<vtkPlaneSource> planeSource =
     vtkSmartPointer<vtkPlaneSource>::New();
-///    planeSource->SetPoint1(0,0,0);
+//    planeSource->SetPoint1(0,0,0);
 //    planeSource->SetPoint2(1,1,1);
   planeSource->SetCenter(1.0, 0.0, 0.0);
   planeSource->SetNormal(1.0, 0.0, 0.0);
- 
+
   // Apply the texture
   vtkSmartPointer<vtkTexture> texture =
     vtkSmartPointer<vtkTexture>::New();
   texture->SetInput(jPEGReader->GetOutput());
- 
+
   vtkSmartPointer<vtkTextureMapToPlane> texturePlane =
     vtkSmartPointer<vtkTextureMapToPlane>::New();
   texturePlane->SetInput(planeSource->GetOutput());
- 
+
   vtkSmartPointer<vtkPolyDataMapper> mapper =
     vtkSmartPointer<vtkPolyDataMapper>::New();
   mapper->SetInputConnection(texturePlane->GetOutputPort());
@@ -301,7 +285,7 @@ void printMaze(std::vector<std::vector<Node*> > & maze)
   vtkSmartPointer<vtkActor> actor =
     vtkSmartPointer<vtkActor>::New();
   actor->SetMapper(mapper);*/
- 
+
   //Create a renderer, render window and interactor
   vtkSmartPointer<vtkRenderer> renderer =
     vtkSmartPointer<vtkRenderer>::New();
@@ -311,43 +295,39 @@ void printMaze(std::vector<std::vector<Node*> > & maze)
   vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
     vtkSmartPointer<vtkRenderWindowInteractor>::New();
   renderWindowInteractor->SetRenderWindow(renderWindow);
- 
+
 
   //Add the actors to the scene
 //  renderer->AddActor(actor);
 	for(int y=0; y < COLUMNS; y++)
-		{
+    {
 		for(int x=0; x < ROWS; x++)
-			{
-				Node * current = maze[y][x];
-				Node ** edges = current->getEdges();
-				for(int i = 0; i < current->getEdgeSize(); i++)
-					{
-						if(current->getY() < edges[i]->getY())
-renderer->AddActor	( CreatePlaneActor(mapper, texture, edges[i]->getX(), - 1 * edges[i]->getY(),0,0,0,90, 0,1,0));
-						if(current->getX() > edges[i]->getX())
-						renderer->AddActor( CreatePlaneActor(mapper, texture, edges[i]->getX(), - 1 * edges[i]->getY(), 0, 0,0,0,1,0,0));
+        {
+            Node * current = maze[y][x];
 
-					}
-			}
-		}
+            if(!current->youCanGoNorth()) // If there is not an opening to the north, make a wall there.
+                renderer->AddActor(CreatePlaneActor(mapper, texture, edges[i]->getX(), - 1 * edges[i]->getY(),0,0,0,90, 0,1,0));
+            if(!current->youCanGoWest())  // If there is not an opening to the west, make a wall there.
+                renderer->AddActor(CreatePlaneActor(mapper, texture, edges[i]->getX(), - 1 * edges[i]->getY(), 0, 0,0,0,1,0,0));
+        }
+    }
 
   // Camera
-  vtkSmartPointer<vtkCamera> camera = 
+  vtkSmartPointer<vtkCamera> camera =
     vtkSmartPointer<vtkCamera>::New();
   camera->SetPosition(0.5, -0.5, 0);
   //camera->SetFocalPoint(0.5, -1, 0);
 //Keyboard Style
-//  vtkSmartPointer<KeyPressInteractorStyle> style = 
+//  vtkSmartPointer<KeyPressInteractorStyle> style =
 //	    vtkSmartPointer<KeyPressInteractorStyle>::New();
 //  style->SetCamera(camera);
   vtkSmartPointer<vtkInteractorStyleTrackballCamera> style =
     vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
   renderWindowInteractor->SetInteractorStyle(style);
-	
+
   renderer->SetActiveCamera(camera);
   renderer->SetBackground(.1,.2,.3); // Background color dark blue
- 
+
   //Render and interact
   renderWindow->Render();
   renderWindowInteractor->Start();
