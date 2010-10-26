@@ -306,9 +306,17 @@ void printMaze(std::vector<std::vector<Node*> > & maze)
             Node * current = maze[y][x];
 
             if(!current->youCanGoNorth()) // If there is not an opening to the north, make a wall there.
-                renderer->AddActor(CreatePlaneActor(mapper, texture, edges[i]->getX(), - 1 * edges[i]->getY(),0,0,0,90, 0,1,0));
+                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * current->getY(),0,0,0,90, 0,1,0));
             if(!current->youCanGoWest())  // If there is not an opening to the west, make a wall there.
-                renderer->AddActor(CreatePlaneActor(mapper, texture, edges[i]->getX(), - 1 * edges[i]->getY(), 0, 0,0,0,1,0,0));
+                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * current->getY(), 0, 0,0,0,1,0,0));
+
+
+            if(x == 0 && !current->youCanGoEast()) {
+                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX() - 1, -1 * current->getY(), 0, 0,0,0,1,0,0));
+		}
+            if(y == COLUMNS - 1 && !current->youCanGoWest()) 
+                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * (current->getY() + 1), 0, 0,0,90,1,0,0));            
+
         }
     }
 
@@ -325,7 +333,7 @@ void printMaze(std::vector<std::vector<Node*> > & maze)
     vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
   renderWindowInteractor->SetInteractorStyle(style);
 
-  renderer->SetActiveCamera(camera);
+  //renderer->SetActiveCamera(camera);
   renderer->SetBackground(.1,.2,.3); // Background color dark blue
 
   //Render and interact
