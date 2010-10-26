@@ -34,4 +34,20 @@ public:
         else
 	        return false;
 	}
+    bool youCanGoEast()
+	{
+	    if (_openEdges == 4 || _openEdges == 5 || _openEdges == 7 ||
+	        _openEdges == 12 || _openEdges == 6 || _openEdges == 13 || _openEdges == 14)
+	        return true;
+        else
+	        return false;
+	}
+    bool youCanGoSouth()
+	{
+	    if (_openEdges == 8 || _openEdges == 9 || _openEdges == 10 ||
+	        _openEdges == 12 || _openEdges == 11 || _openEdges == 13 || _openEdges == 14)
+	        return true;
+        else
+	        return false;
+	}
 };
