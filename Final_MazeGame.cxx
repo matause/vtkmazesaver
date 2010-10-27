@@ -56,6 +56,8 @@ Command Line Arguments:
 #define ROWS 10
 #define COLUMNS 10
 
+#define OFFSET -.5
+
 #define TEXTURE1 "texture1.jpg"
 
 // Define interaction style
@@ -243,10 +245,10 @@ vtkSmartPointer<vtkActor> CreatePlaneActor(vtkSmartPointer<vtkPolyDataMapper> ma
 	actor->SetTexture(texture);
 
 	//Transform
+	actor->SetPosition(x,y,z);
 	actor->RotateX(rotx);
 	actor->RotateY(roty);
 	actor->RotateZ(rotz);
-	actor->SetPosition(x,y,z);
 	//Change Color
 	actor->GetProperty()->SetColor(R,G,B);
 	return actor;
@@ -306,16 +308,15 @@ void printMaze(std::vector<std::vector<Node*> > & maze)
             Node * current = maze[y][x];
 
             if(!current->youCanGoNorth()) // If there is not an opening to the north, make a wall there.
-                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * current->getY(),0,0,0,90, 0,1,0));
+                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * current->getY() + OFFSET,0,0,0,90, 0,1,0));
             if(!current->youCanGoWest())  // If there is not an opening to the west, make a wall there.
-                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * current->getY(), 0, 0,0,0,1,0,0));
-
-
-            if(x == 0 && !current->youCanGoEast()) {
-                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX() - 1, -1 * current->getY(), 0, 0,0,0,1,0,0));
-		}
+                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX() + OFFSET, - 1 * current->getY(), 0, 0,0,0,1,0,0));
             if(y == COLUMNS - 1 && !current->youCanGoWest()) 
-                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * (current->getY() + 1), 0, 0,0,90,1,0,0));            
+                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,1,0,0));
+            if(x == 0 && !current->youCanGoEast()) {
+                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX() - 1 + OFFSET, -1 * current->getY(), 0, 0,0,0,0,1,0));
+		}
+
 
         }
     }
@@ -346,5 +347,6 @@ int main(int argc,char *argv[])
 	std::vector<std::vector<Node*> > maze;
 	initMaze(maze);
 	printMaze(maze);
+	
   return EXIT_SUCCESS;
 }
