@@ -304,26 +304,14 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
             if(!current->youCanGoWest())  // If there is not an opening to the west, make a wall there.
                 renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX() + OFFSET, - 1 * current->getY(), 0, 0,0,0,1,0,0));
             if(y == COLUMNS - 1 && !current->youCanGoWest())
-                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,1,0,0));
+                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,0,1,0));
             if(x == 0 && !current->youCanGoEast()) {
-                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX() - 1 + OFFSET, -1 * current->getY(), 0, 0,0,0,0,1,0));
+                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX() - 1 + OFFSET, -1 * current->getY(), 0, 0,0,0,1,0,0));
 		}
 
 
         }
     }
-}
-
-void spawnCoordinateAxes(vtkSmartPointer<vtkRenderWindowInteractor> &renderWindowInteractor)
-{
-    vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
-    vtkSmartPointer<vtkOrientationMarkerWidget> widget = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
-    widget->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
-    widget->SetOrientationMarker( axes );
-    widget->SetInteractor( renderWindowInteractor );
-    widget->SetViewport( 0.0, 0.0, 0.4, 0.4 );
-    widget->SetEnabled( 1 );
-    widget->InteractiveOn();
 }
 
 int main(int argc,char *argv[])
@@ -338,23 +326,36 @@ int main(int argc,char *argv[])
 	std::vector<std::vector<Node*> > maze;
 	initMaze(maze);
 	printMaze(maze, renderer);
-	spawnCoordinateAxes(renderWindowInteractor);
 
-	  // Camera
+  // Camera
   vtkSmartPointer<vtkCamera> camera =
     vtkSmartPointer<vtkCamera>::New();
-  camera->SetPosition(0.5, -0.5, 0);
-  //camera->SetFocalPoint(0.5, -1, 0);
+//  camera->SetPosition(ROWS/2, -1 * COLUMNS/2, 10);
+  camera->SetFocalPoint(ROWS/2, -1 * COLUMNS/2, 00);
+  renderer->SetActiveCamera(camera);
+
 //Keyboard Style
 //  vtkSmartPointer<KeyPressInteractorStyle> style =
 //	    vtkSmartPointer<KeyPressInteractorStyle>::New();
 //  style->SetCamera(camera);
+
   vtkSmartPointer<vtkInteractorStyleTrackballCamera> style =
     vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
   renderWindowInteractor->SetInteractorStyle(style);
 
   //renderer->SetActiveCamera(camera);
   renderer->SetBackground(.1,.2,.3); // Background color dark blue
+
+
+    //Axes made here
+    vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
+    vtkSmartPointer<vtkOrientationMarkerWidget> widget = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
+    widget->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
+    widget->SetOrientationMarker( axes );
+    widget->SetInteractor( renderWindowInteractor );
+    widget->SetViewport( 0.0, 0.0, 0.4, 0.4 );
+    widget->SetEnabled( 1 );
+    widget->InteractiveOn();
 
   //Render and interact
   renderWindow->Render();
