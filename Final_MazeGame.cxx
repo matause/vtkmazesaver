@@ -42,6 +42,8 @@ Command Line Arguments:
 #include <vtkImageData.h>
 #include <vtkJPEGReader.h>
 #include <vtkTextureMapToPlane.h>
+#include <vtkAxesActor.h>
+#include <vtkOrientationMarkerWidget.h>
 
 #include <iostream>
 #include <fstream>
@@ -254,7 +256,7 @@ vtkSmartPointer<vtkActor> CreatePlaneActor(vtkSmartPointer<vtkPolyDataMapper> ma
 	return actor;
 }
 
-void printMaze(std::vector<std::vector<Node*> > & maze)
+void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRenderer> &renderer)
 {
 
   vtkSmartPointer<vtkJPEGReader> jPEGReader =
@@ -288,16 +290,6 @@ void printMaze(std::vector<std::vector<Node*> > & maze)
     vtkSmartPointer<vtkActor>::New();
   actor->SetMapper(mapper);*/
 
-  //Create a renderer, render window and interactor
-  vtkSmartPointer<vtkRenderer> renderer =
-    vtkSmartPointer<vtkRenderer>::New();
-  vtkSmartPointer<vtkRenderWindow> renderWindow =
-    vtkSmartPointer<vtkRenderWindow>::New();
-  renderWindow->AddRenderer(renderer);
-  vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
-    vtkSmartPointer<vtkRenderWindowInteractor>::New();
-  renderWindowInteractor->SetRenderWindow(renderWindow);
-
 
   //Add the actors to the scene
 //  renderer->AddActor(actor);
@@ -311,7 +303,7 @@ void printMaze(std::vector<std::vector<Node*> > & maze)
                 renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * current->getY() + OFFSET,0,0,0,90, 0,1,0));
             if(!current->youCanGoWest())  // If there is not an opening to the west, make a wall there.
                 renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX() + OFFSET, - 1 * current->getY(), 0, 0,0,0,1,0,0));
-            if(y == COLUMNS - 1 && !current->youCanGoWest()) 
+            if(y == COLUMNS - 1 && !current->youCanGoWest())
                 renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,1,0,0));
             if(x == 0 && !current->youCanGoEast()) {
                 renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX() - 1 + OFFSET, -1 * current->getY(), 0, 0,0,0,0,1,0));
@@ -320,8 +312,35 @@ void printMaze(std::vector<std::vector<Node*> > & maze)
 
         }
     }
+}
 
-  // Camera
+void spawnCoordinateAxes(vtkSmartPointer<vtkRenderWindowInteractor> &renderWindowInteractor)
+{
+    vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
+    vtkSmartPointer<vtkOrientationMarkerWidget> widget = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
+    widget->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
+    widget->SetOrientationMarker( axes );
+    widget->SetInteractor( renderWindowInteractor );
+    widget->SetViewport( 0.0, 0.0, 0.4, 0.4 );
+    widget->SetEnabled( 1 );
+    widget->InteractiveOn();
+}
+
+int main(int argc,char *argv[])
+{
+	  //Create a renderer, render window and interactor
+    vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
+    vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+    renderWindow->AddRenderer(renderer);
+    vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    renderWindowInteractor->SetRenderWindow(renderWindow);
+
+	std::vector<std::vector<Node*> > maze;
+	initMaze(maze);
+	printMaze(maze, renderer);
+	spawnCoordinateAxes(renderWindowInteractor);
+
+	  // Camera
   vtkSmartPointer<vtkCamera> camera =
     vtkSmartPointer<vtkCamera>::New();
   camera->SetPosition(0.5, -0.5, 0);
@@ -340,13 +359,6 @@ void printMaze(std::vector<std::vector<Node*> > & maze)
   //Render and interact
   renderWindow->Render();
   renderWindowInteractor->Start();
-}
 
-int main(int argc,char *argv[])
-{
-	std::vector<std::vector<Node*> > maze;
-	initMaze(maze);
-	printMaze(maze);
-	
   return EXIT_SUCCESS;
 }
