@@ -44,6 +44,7 @@ Command Line Arguments:
 #include <vtkTextureMapToPlane.h>
 #include <vtkAxesActor.h>
 #include <vtkOrientationMarkerWidget.h>
+#include <vtkActorCollection.h>
 
 #include <iostream>
 #include <fstream>
@@ -68,10 +69,11 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
   private:
 	vtkSmartPointer<vtkActor> ControlActor;  //Player
 	vtkSmartPointer<vtkActor> EndActor;      //End Condition
-    vtkSmartPointer<vtkCamera> Camera;
+	vtkSmartPointer<vtkCamera> Camera;
 	vtkSmartPointer<vtkPolyData> Cube;
 	vtkSmartPointer<vtkPolyData> Sphere;
 	std::vector <vtkSmartPointer<vtkActor> > MazeBlocks;
+	vtkActorCollection * actorCollection;
 	bool End;
 	double VELOCITY;
   public:
@@ -83,9 +85,10 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
         Sphere = sphereSource;
         VELOCITY = 0;
     }
-    void SetCamera(vtkSmartPointer<vtkCamera> c)
+    void SetCamera(vtkSmartPointer<vtkCamera> c, vtkActorCollection * ac)
     {
         Camera = c;
+	actorCollection = ac;
     }
     //checks if actor is intersecting with maze or end condition
     //returns true if it is intersecting, and false otherwise
@@ -175,20 +178,21 @@ std::cout << "InsideArray:\n";
     //Handles Keypresses
     virtual void OnKeyPress()
     {
-      if(End == true)
-	return;
       // Get the keypress
       vtkRenderWindowInteractor *rwi = this->Interactor;
       std::string key = rwi->GetKeySym();
       //Get actor position
-      double * Position = Camera->GetPosition();
-      double x = Position[0];
-      double y = Position[1];
-      double z = Position[2];
-
+	double * p = Camera->GetPosition();
+	double x = p[0];
+	double y = p[1];
+	double z = p[2];
+	double * f = Camera->GetFocalPoint();
+	
       // Handles the arrow keys and moves the Player accordingly
       if(key.compare("Up") == 0)
         {
+	Camera->SetPosition(x+1,y,z);
+	Camera->SetFocalPoint(f[0]+1, f[1], f[2]);
 /*
 	if(VELOCITY <= MAXVELOCITY)
 	VELOCITY += ACCELERATION;
@@ -197,6 +201,8 @@ std::cout << "InsideArray:\n";
         }
        if(key.compare("Down") == 0)
         {
+	Camera->SetPosition(x-1,y,z);
+	Camera->SetFocalPoint(f[0]-1, f[1], f[2]);
 /*
 	if(VELOCITY <= MAXVELOCITY)
 	VELOCITY += ACCELERATION;
@@ -205,6 +211,8 @@ std::cout << "InsideArray:\n";
         }
       if(key.compare("Left") == 0)
         {
+	Camera->SetPosition(x,y-1,z);
+	Camera->SetFocalPoint(f[0], f[1] - 1, f[2]);
 /*
 	if(VELOCITY <= MAXVELOCITY)
 	VELOCITY += ACCELERATION;
@@ -213,6 +221,8 @@ std::cout << "InsideArray:\n";
         }
       if(key.compare("Right") == 0)
         {
+	Camera->SetPosition(x,y+1,z);
+	Camera->SetFocalPoint(f[0], f[1]+1, f[2]);
 /*
 	if(VELOCITY <= MAXVELOCITY)
 	VELOCITY += ACCELERATION;
@@ -221,8 +231,7 @@ std::cout << "InsideArray:\n";
 */
         }
 	//If the player is colliding with something,
-	if(isinside(ControlActor))
-	ControlActor->SetPosition(x,y,z);
+
       this->Interactor->GetRenderWindow()->Render();
     }
 
@@ -256,7 +265,7 @@ vtkSmartPointer<vtkActor> CreatePlaneActor(vtkSmartPointer<vtkPolyDataMapper> ma
 	return actor;
 }
 
-void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRenderer> &renderer)
+void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRenderer> &renderer,   vtkActorCollection * &actorCollection)
 {
 
   vtkSmartPointer<vtkJPEGReader> jPEGReader =
@@ -298,20 +307,35 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
 		for(int x=0; x < ROWS; x++)
         {
             Node * current = maze[y][x];
-
-            if(!current->youCanGoNorth()) // If there is not an opening to the north, make a wall there.
-                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * current->getY() + OFFSET,0,0,0,90, 0,1,0));
-            if(!current->youCanGoWest())  // If there is not an opening to the west, make a wall there.
-                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX() + OFFSET, - 1 * current->getY(), 0, 0,0,0,1,0,0));
-            if(y == COLUMNS - 1 && !current->youCanGoWest())
-                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,0,1,0));
-            if(x == 0 && !current->youCanGoEast()) {
-                renderer->AddActor(CreatePlaneActor(mapper, texture, current->getX() - 1 + OFFSET, -1 * current->getY(), 0, 0,0,0,1,0,0));
+		// If there is not an opening to the north, make a wall there.
+            if(!current->youCanGoNorth()) 
+		{
+		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX(), - 1 * current->getY() + OFFSET,0,0,0,90, 0,1,0);
+                renderer->AddActor(a);
+		actorCollection->AddItem(a);
 		}
-
-
+// If there is not an opening to the west, make a wall there.
+            if(!current->youCanGoWest())  
+		{
+		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() + OFFSET, - 1 * current->getY(), 0, 0,0,0,1,0,0);
+                renderer->AddActor(a);
+		actorCollection->AddItem(a);
+		}
+            if(y == COLUMNS - 1 && !current->youCanGoWest())
+		{
+		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,0,1,0);
+                renderer->AddActor(a);
+		actorCollection->AddItem(a);
+		}
+            if(x == 0 && !current->youCanGoEast()) 
+		{
+		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() - 1 + OFFSET, -1 * current->getY(), 0, 0,0,0,1,0,0);
+                renderer->AddActor(a);
+		actorCollection->AddItem(a);
+		}
         }
     }
+    actorCollection->InitTraversal();
 }
 
 int main(int argc,char *argv[])
@@ -322,26 +346,31 @@ int main(int argc,char *argv[])
     renderWindow->AddRenderer(renderer);
     vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     renderWindowInteractor->SetRenderWindow(renderWindow);
+  vtkActorCollection * actorCollection = vtkActorCollection::New();
 
 	std::vector<std::vector<Node*> > maze;
 	initMaze(maze);
-	printMaze(maze, renderer);
+	printMaze(maze, renderer,actorCollection);
 
   // Camera
   vtkSmartPointer<vtkCamera> camera =
     vtkSmartPointer<vtkCamera>::New();
 //  camera->SetPosition(ROWS/2, -1 * COLUMNS/2, 10);
-  camera->SetFocalPoint(ROWS/2, -1 * COLUMNS/2, 00);
+//  camera->SetFocalPoint(ROWS/2, -1 * COLUMNS/2, 00);
+    camera->SetPosition(.5,-.5,0);
+    camera->SetFocalPoint(1,-.5,0);
+    camera->Roll(90);
   renderer->SetActiveCamera(camera);
 
 //Keyboard Style
-//  vtkSmartPointer<KeyPressInteractorStyle> style =
-//	    vtkSmartPointer<KeyPressInteractorStyle>::New();
-//  style->SetCamera(camera);
+  vtkSmartPointer<KeyPressInteractorStyle> keystyle =
+	    vtkSmartPointer<KeyPressInteractorStyle>::New();
+  keystyle->SetCamera(camera, actorCollection);
+  renderWindowInteractor->SetInteractorStyle(keystyle);
 
   vtkSmartPointer<vtkInteractorStyleTrackballCamera> style =
     vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
-  renderWindowInteractor->SetInteractorStyle(style);
+//  renderWindowInteractor->SetInteractorStyle(style);
 
   //renderer->SetActiveCamera(camera);
   renderer->SetBackground(.1,.2,.3); // Background color dark blue
