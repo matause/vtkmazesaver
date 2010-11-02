@@ -18,10 +18,14 @@ public:
 	void visit() {_visited = true;}
 	void unvisit() {_visited = false;}
 	unsigned int getEdges() {return _openEdges;}
+	void removeNorthWall() {if (!youCanGoNorth()) _openEdges +=N;}
+	void removeSouthWall() {if (!youCanGoSouth()) _openEdges +=S;}
+	void removeEastWall() {if (!youCanGoEast()) _openEdges +=E;}
+	void removeWestWall() {if (!youCanGoWest()) _openEdges +=W;}
 	bool youCanGoNorth()
 	{
 	    if (_openEdges == 1 || _openEdges == 3 || _openEdges == 5 ||
-	        _openEdges == 9 || _openEdges == 7 || _openEdges == 11 || _openEdges == 13)
+	        _openEdges == 9 || _openEdges == 7 || _openEdges == 11 || _openEdges == 13 || _openEdges == 15)
 	        return true;
         else
 	        return false;
@@ -29,7 +33,7 @@ public:
     bool youCanGoWest()
 	{
 	    if (_openEdges == 8 || _openEdges == 9 || _openEdges == 10 ||
-	        _openEdges == 12 || _openEdges == 11 || _openEdges == 13 || _openEdges == 14)
+	        _openEdges == 12 || _openEdges == 11 || _openEdges == 13 || _openEdges == 14 || _openEdges == 15)
 	        return true;
         else
 	        return false;
@@ -37,7 +41,7 @@ public:
     bool youCanGoEast()
 	{
 	    if (_openEdges == 4 || _openEdges == 5 || _openEdges == 7 ||
-	        _openEdges == 12 || _openEdges == 6 || _openEdges == 13 || _openEdges == 14)
+	        _openEdges == 12 || _openEdges == 6 || _openEdges == 13 || _openEdges == 14 || _openEdges == 15)
 	        return true;
         else
 	        return false;
@@ -45,7 +49,7 @@ public:
     bool youCanGoSouth()
 	{
 	    if (_openEdges == 8 || _openEdges == 9 || _openEdges == 10 ||
-	        _openEdges == 12 || _openEdges == 11 || _openEdges == 13 || _openEdges == 14)
+	        _openEdges == 12 || _openEdges == 11 || _openEdges == 13 || _openEdges == 14 || _openEdges == 15)
 	        return true;
         else
 	        return false;
