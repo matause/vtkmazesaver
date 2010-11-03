@@ -328,6 +328,129 @@ void initMaze(std::vector<std::vector<Node*> > & maze)
 			maze[y].push_back(new Node(x,y));
 	}
 }
+bool finishedVisiting(std::vector<std::vector<Node*> > & maze, Node * & Current)
+{
+	int x = Current->getX();
+	int y = Current->getY();
+	//South
+	if(y < ROWS - 1)
+		{
+		if(!maze[y+1][x]->visited()  && !Current->youCanGoSouth())
+			{
+				return false;
+			}			
+		}
+	if(y > 0)
+		{
+		if(!maze[y-1][x]->visited()  && !Current->youCanGoNorth())
+			{
+				return false;
+			}
+		}
+			//West
+	if(x < COLUMNS - 1)
+		{
+		if(!maze[y][x+1]->visited()  && !Current->youCanGoWest())
+			{
+				return false;
+			}
+		}
+	//East
+	if(x > 0)
+		{
+		if(!maze[y][x-1]->visited()  && !Current->youCanGoEast())
+			{
+				return false;
+			}	
+	  	}
+	return true;
+}
+void generateMaze(std::vector<std::vector<Node*> > & maze, Node * & Current)
+{
+	if(finishedVisiting(maze,Current)) return;
+	//vtkSmartPointer<vtkMinimalStandardRandomSequence> sequence = 
+	//    vtkSmartPointer<vtkMinimalStandardRandomSequence>::New();
+	// initialize the sequence
+	//sequence->SetSeed(1);
+//	int i = (int) (sequence->GetValue() * 100);
+	bool found = false;
+	Current->visit();
+	while(!found)
+	{
+	int x = Current->getX();
+	int y = Current->getY();
+        int i = (int) vtkMath::Random(0.0,100.0);
+		//South
+		if(i >= 0 && i <25)
+		{
+			if(y < COLUMNS - 1)
+			{
+				if(!maze[y+1][x]->visited()  && !Current->youCanGoSouth())
+				{
+					maze[y+1][x]->removeNorthWall();
+					Current->removeSouthWall();
+					generateMaze(maze,maze[y+1][x]);
+if(finishedVisiting(maze,Current))
+					found = true;
+				}
+				
+				
+			}
+	  	}
+		if(i >= 25 && i < 50)
+		{
+		//North
+			if(y > 0)
+			{
+				if(!maze[y-1][x]->visited()  && !Current->youCanGoNorth())
+				{
+					maze[y-1][x]->removeSouthWall();
+					Current->removeNorthWall();
+					generateMaze(maze,maze[y-1][x]);
+if(finishedVisiting(maze,Current))
+					found = true;
+				}
+				
+				
+			}
+	  	}
+		if(i >= 50 && i < 75)
+		{
+			//West
+			if(x < COLUMNS - 1)
+			{
+				if(!maze[y][x+1]->visited()  && !Current->youCanGoWest())
+				{
+					maze[y][x+1]->removeEastWall();
+					Current->removeWestWall();
+					generateMaze(maze,maze[y][x+1]);
+if(finishedVisiting(maze,Current))
+					found = true;
+				}
+				
+				
+			}
+		
+	  	}
+		if(i >= 75 && i <100)
+		{
+			//East
+			if(x > 0)
+			{
+				if(!maze[y][x-1]->visited()  && !Current->youCanGoEast())
+				{
+					maze[y][x-1]->removeWestWall();
+					Current->removeEastWall();
+					generateMaze(maze,maze[y][x-1]);
+					if(finishedVisiting(maze,Current))
+					found = true;
+				}
+				
+				
+			}		
+	  	}
+	}
+}
 
 vtkSmartPointer<vtkActor> CreatePlaneActor(vtkSmartPointer<vtkPolyDataMapper> mapper,vtkSmartPointer<vtkTexture> texture, double x, double y, double z, double rotx, double roty, double rotz, double R, double G, double B) {
 	vtkSmartPointer<vtkActor> actor =
@@ -388,26 +511,26 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
         {
             Node * current = maze[y][x];
 		// If there is not an opening to the north, make a wall there.
-            if(!current->youCanGoNorth())
+            if(!current->youCanGoNorth()) 
 		{
 		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX(), - 1 * current->getY() + OFFSET,0,0,0,90, 0,1,0);
                 renderer->AddActor(a);
 		actorCollection->AddItem(a);
 		}
 // If there is not an opening to the west, make a wall there.
-            if(!current->youCanGoWest())
+            if(!current->youCanGoWest())  
 		{
 		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() + OFFSET, - 1 * current->getY(), 0, 0,0,0,1,0,0);
                 renderer->AddActor(a);
 		actorCollection->AddItem(a);
 		}
-            if(y == COLUMNS - 1 && !current->youCanGoWest())
+            if(y == COLUMNS - 1)// && !current->youCanGoWest())
 		{
 		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,0,1,0);
                 renderer->AddActor(a);
 		actorCollection->AddItem(a);
 		}
-            if(x == 0 && !current->youCanGoEast())
+            if(x == 0)// && !current->youCanGoEast()) 
 		{
 		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() - 1 + OFFSET, -1 * current->getY(), 0, 0,0,0,1,0,0);
                 renderer->AddActor(a);
@@ -430,6 +553,8 @@ int main(int argc,char *argv[])
 
 	std::vector<std::vector<Node*> > maze;
 	initMaze(maze);
+	vtkMath::RandomSeed(time(NULL));
+	generateMaze(maze, maze[0][0]);
 	printMaze(maze, renderer,actorCollection);
 
   // Camera
