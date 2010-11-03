@@ -50,16 +50,18 @@ Command Line Arguments:
 #include <fstream>
 #include <string>
 #include <vector>
+#include <math.h>
 
 #include "Node.h"
-
-#define MAXVELOCITY .2
-#define ACCELERATION .02
 
 #define ROWS 10
 #define COLUMNS 10
 
 #define OFFSET -.5
+#define PI 3.14159265
+
+#define MOVEINCREMENT 0.2
+#define ANGLEINCREMENT PI/24
 
 #define TEXTURE1 "texture1.jpg"
 
@@ -75,6 +77,7 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
 	std::vector <vtkSmartPointer<vtkActor> > MazeBlocks;
 	vtkActorCollection * actorCollection;
 	bool End;
+	bool topUnitCircle;
 	double VELOCITY;
   public:
     static KeyPressInteractorStyle* New();
@@ -88,7 +91,8 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
     void SetCamera(vtkSmartPointer<vtkCamera> c, vtkActorCollection * ac)
     {
         Camera = c;
-	actorCollection = ac;
+        actorCollection = ac;
+        topUnitCircle = true;
     }
     //checks if actor is intersecting with maze or end condition
     //returns true if it is intersecting, and false otherwise
@@ -178,61 +182,137 @@ std::cout << "InsideArray:\n";
     //Handles Keypresses
     virtual void OnKeyPress()
     {
-      // Get the keypress
-      vtkRenderWindowInteractor *rwi = this->Interactor;
-      std::string key = rwi->GetKeySym();
-      //Get actor position
-	double * p = Camera->GetPosition();
-	double x = p[0];
-	double y = p[1];
-	double z = p[2];
-	double * f = Camera->GetFocalPoint();
-	
-      // Handles the arrow keys and moves the Player accordingly
-      if(key.compare("Up") == 0)
-        {
-	Camera->SetPosition(x+1,y,z);
-	Camera->SetFocalPoint(f[0]+1, f[1], f[2]);
-/*
-	if(VELOCITY <= MAXVELOCITY)
-	VELOCITY += ACCELERATION;
-	ControlActor->SetPosition(x,y+VELOCITY,z);
-*/
-        }
-       if(key.compare("Down") == 0)
-        {
-	Camera->SetPosition(x-1,y,z);
-	Camera->SetFocalPoint(f[0]-1, f[1], f[2]);
-/*
-	if(VELOCITY <= MAXVELOCITY)
-	VELOCITY += ACCELERATION;
-	ControlActor->SetPosition(x,y-VELOCITY,z);
-*/
-        }
-      if(key.compare("Left") == 0)
-        {
-	Camera->SetPosition(x,y-1,z);
-	Camera->SetFocalPoint(f[0], f[1] - 1, f[2]);
-/*
-	if(VELOCITY <= MAXVELOCITY)
-	VELOCITY += ACCELERATION;
-	ControlActor->SetPosition(x-VELOCITY,y,z);
-*/
-        }
-      if(key.compare("Right") == 0)
-        {
-	Camera->SetPosition(x,y+1,z);
-	Camera->SetFocalPoint(f[0], f[1]+1, f[2]);
-/*
-	if(VELOCITY <= MAXVELOCITY)
-	VELOCITY += ACCELERATION;
+        // Get the keypress
+        vtkRenderWindowInteractor *rwi = this->Interactor;
+        std::string key = rwi->GetKeySym();
 
-	ControlActor->SetPosition(x+VELOCITY,y,z);
-*/
-        }
-	//If the player is colliding with something,
+        //Get actor position
+        double * p = Camera->GetPosition();
+        double xPosition = p[0];
+        double yPosition = p[1];
+        double * f = Camera->GetFocalPoint();
+        double xFocus = f[0];
+        double yFocus = f[1];
 
-      this->Interactor->GetRenderWindow()->Render();
+        double xLook = xFocus - xPosition;
+        double yLook = yFocus - yPosition;
+        double angle;
+
+        // Be careful not to divide by zero! If x is close enough to zero, we will just call it zero
+        // and set the angle to Pi/2.
+        if (fabs(xLook) > 0.0001)
+        {
+            angle = atan(yLook / xLook);
+            std::cout << "*Set the angle using atan" << std::endl;
+        }
+        else if (yLook > 0)
+        {
+            angle = PI / 2;
+            std::cout << "*Set the angle explicitly to PI / 2" << std::endl;
+        }
+        else
+        {
+            angle = PI / 2;
+            std::cout << "*Set the angle explicitly to PI / 2" << std::endl;
+        }
+
+        if (xLook < 0)
+        {
+            std::cout << "*Added PI to the angle" << std::endl;
+            angle = PI + angle;
+        }
+
+        std::cout << "BEFORE MOVEMENT\n";
+        std::cout << "Camera position: (" << xPosition << ", " << yPosition << ")." << std::endl;
+        std::cout << "Focal position:  (" << xFocus << ", " << yFocus << ")." << std::endl;
+        std::cout << "Look direction:  (" << xLook << ", " << yLook << ")." << std::endl;
+        std::cout << "Angle:           " << angle << "\n" <<std::endl;
+
+        // Handles the arrow keys and moves the Player accordingly
+        if(key.compare("Up") == 0)
+        {
+            std::cout << "*Up" << std::endl;
+            Camera->SetPosition(xPosition + MOVEINCREMENT*(xLook), yPosition + MOVEINCREMENT*(yLook), 0);
+            /*
+            if(VELOCITY <= MAXVELOCITY)
+            VELOCITY += ACCELERATION;
+            ControlActor->SetPosition(x,y+VELOCITY,z);
+            */
+        }
+        if(key.compare("Down") == 0)
+        {
+            std::cout << "*Down" << std::endl;
+            Camera->SetPosition(xPosition - MOVEINCREMENT*(xLook), yPosition - MOVEINCREMENT*(yLook), 0);
+            /*
+            if(VELOCITY <= MAXVELOCITY)
+            VELOCITY += ACCELERATION;
+            ControlActor->SetPosition(x,y-VELOCITY,z);
+            */
+        }
+        if(key.compare("Right") == 0)
+        {
+            std::cout << "*Right" << std::endl;
+            angle -= ANGLEINCREMENT;
+        }
+        if(key.compare("Left") == 0)
+        {
+            std::cout << "*Left" << std::endl;
+            angle += ANGLEINCREMENT;
+        }
+
+        if (angle > 2*PI)
+        {
+            std::cout << "*Angle was " << angle;
+            angle -= 2*PI;
+            std::cout << " and is now " << angle << std::endl;
+        }
+        else if (angle < 0)
+        {
+            std::cout << "*Angle was " << angle;
+            angle += 2*PI;
+            std::cout << " and is now " << angle << std::endl;
+        }
+
+        /*if (angle < 0 || angle > PI)
+            topUnitCircle = false;
+        else
+            topUnitCircle = true;*/
+
+        p = Camera->GetPosition();
+        xPosition = p[0];
+        yPosition = p[1];
+
+        Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
+
+        //If the player is colliding with something,
+
+        p = Camera->GetPosition();
+        xPosition = p[0];
+        yPosition = p[1];
+        f = Camera->GetFocalPoint();
+        xFocus = f[0];
+        yFocus = f[1];
+
+        xLook = xFocus - xPosition;
+        yLook = yFocus - yPosition;
+
+        if (xLook != 0)
+            angle = atan(yLook / xLook);
+        else if (yLook > 0)
+            angle = PI;
+        else
+            angle = -PI;
+
+        std::cout << "AFTER MOVEMENT\n";
+        std::cout << "Camera position: (" << xPosition << ", " << yPosition << ")." << std::endl;
+        std::cout << "Focal position:  (" << xFocus << ", " << yFocus << ")." << std::endl;
+        std::cout << "Look direction:  (" << xLook << ", " << yLook << ")." << std::endl;
+        std::cout << "Angle:           " << angle <<std::endl;
+        std::cout << "cos(angle):      " << cos(angle) <<std::endl;
+        std::cout << "sin(angle):      " << sin(angle) << "\n" <<std::endl;
+
+
+        this->Interactor->GetRenderWindow()->Render();
     }
 
 };
@@ -308,14 +388,14 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
         {
             Node * current = maze[y][x];
 		// If there is not an opening to the north, make a wall there.
-            if(!current->youCanGoNorth()) 
+            if(!current->youCanGoNorth())
 		{
 		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX(), - 1 * current->getY() + OFFSET,0,0,0,90, 0,1,0);
                 renderer->AddActor(a);
 		actorCollection->AddItem(a);
 		}
 // If there is not an opening to the west, make a wall there.
-            if(!current->youCanGoWest())  
+            if(!current->youCanGoWest())
 		{
 		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() + OFFSET, - 1 * current->getY(), 0, 0,0,0,1,0,0);
                 renderer->AddActor(a);
@@ -327,7 +407,7 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
                 renderer->AddActor(a);
 		actorCollection->AddItem(a);
 		}
-            if(x == 0 && !current->youCanGoEast()) 
+            if(x == 0 && !current->youCanGoEast())
 		{
 		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() - 1 + OFFSET, -1 * current->getY(), 0, 0,0,0,1,0,0);
                 renderer->AddActor(a);
@@ -357,8 +437,8 @@ int main(int argc,char *argv[])
     vtkSmartPointer<vtkCamera>::New();
 //  camera->SetPosition(ROWS/2, -1 * COLUMNS/2, 10);
 //  camera->SetFocalPoint(ROWS/2, -1 * COLUMNS/2, 00);
-    camera->SetPosition(.5,-.5,0);
-    camera->SetFocalPoint(1,-.5,0);
+    camera->SetPosition(0,0,0);
+    camera->SetFocalPoint(1,0,0);
     camera->Roll(90);
   renderer->SetActiveCamera(camera);
 
