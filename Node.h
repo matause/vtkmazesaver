@@ -17,6 +17,7 @@ public:
 	void addEdge(unsigned int openEdges) {_openEdges = openEdges;}
 	void visit() {_visited = true;}
 	void unvisit() {_visited = false;}
+	bool visited() {return _visited;}
 	unsigned int getEdges() {return _openEdges;}
 	void removeNorthWall() {if (!youCanGoNorth()) _openEdges +=N;}
 	void removeSouthWall() {if (!youCanGoSouth()) _openEdges +=S;}
