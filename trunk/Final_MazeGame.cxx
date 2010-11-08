@@ -50,6 +50,7 @@ Command Line Arguments:
 #include <fstream>
 #include <string>
 #include <vector>
+#include <stack>
 #include <math.h>
 
 #include "Node.h"
@@ -386,7 +387,7 @@ void generateMaze(std::vector<std::vector<Node*> > & maze, Node * & Current)
 			if(y < COLUMNS - 1)
 			{
 				if(!maze[y+1][x]->visited()  && !Current->youCanGoSouth())
-				{
+				{	
 					maze[y+1][x]->removeNorthWall();
 					Current->removeSouthWall();
 					generateMaze(maze,maze[y+1][x]);
@@ -422,6 +423,7 @@ if(finishedVisiting(maze,Current))
 				if(!maze[y][x+1]->visited()  && !Current->youCanGoWest())
 				{
 					maze[y][x+1]->removeEastWall();
+					if(x != 0)
 					Current->removeWestWall();
 					generateMaze(maze,maze[y][x+1]);
 if(finishedVisiting(maze,Current))
@@ -440,18 +442,102 @@ if(finishedVisiting(maze,Current))
 				if(!maze[y][x-1]->visited()  && !Current->youCanGoEast())
 				{
 					maze[y][x-1]->removeWestWall();
+					if(x != COLUMNS - 1)
 					Current->removeEastWall();
 					generateMaze(maze,maze[y][x-1]);
-					if(finishedVisiting(maze,Current))
-					found = true;
+						found = true;
 				}
-				
-				
-			}		
+			}
 	  	}
 	}
+	//if(!finishedVisiting(maze,Current)) generateMaze(maze,Current);
 }
+void generateMaze2(std::vector<std::vector<Node*> > & maze)
+{
+	Node * current = maze[0][0];
+	int visited = 1;
+	int total = ROWS * COLUMNS;
+	std::stack <Node*> CellStack;
+	//CellStack.push(current);
+	while(visited < total)
+	{
+		current->visit();
+		int x = current->getX();
+		int y = current->getY();
+		std::vector <Node*> adjacentcells;
+		int i = (int) vtkMath::Random(0.0,100.0);
+		//North
+		if(y > 0) 
+		{
+			if(!maze[y-1][x]->visited())
+				adjacentcells.push_back(maze[y-1][x]);
+		}
+		//South
+		if(y < ROWS - 1)
+		{
+			if(!maze[y+1][x]->visited())
+				adjacentcells.push_back(maze[y+1][x]);
+		}
+		//East
+		if(x > 0)
+		{
+			if(!maze[y][x-1]->visited())
+				adjacentcells.push_back(maze[y][x-1]);
+		}
+		if(x < COLUMNS - 1)
+		{
+			if(!maze[y][x+1]->visited())
+				adjacentcells.push_back(maze[y][x+1]);
+		}
 
+		if(adjacentcells.size() == 0)
+		{
+			std::cout << CellStack.size() << " ";
+			current = CellStack.top();
+			CellStack.pop();
+			std::cout << CellStack.size() << "\n";
+			std::string z;
+	//		std::cin >> z;
+		}
+		else
+		{
+			std::cout << adjacentcells.size() << "  adjacent Cells\n";
+			std::string z;
+//			std::cin >> z;
+			i = i % adjacentcells.size();
+			if(x == adjacentcells[i]->getX())
+			{
+				if(y < adjacentcells[i]->getY())
+				{
+					current->removeSouthWall();
+					adjacentcells[i]->removeNorthWall();
+				}
+				else
+				{
+					current->removeNorthWall();
+					adjacentcells[i]->removeSouthWall();
+				}
+			}
+			else
+			{
+				if(x < adjacentcells[i]->getX())
+				{
+					current->removeEastWall();
+					adjacentcells[i]->removeWestWall();
+				}
+				else
+				{
+					current->removeWestWall();
+					adjacentcells[i]->removeEastWall();
+				}
+			}
+			visited++;
+			CellStack.push(current);
+			current = adjacentcells[i];
+		}
+		
+	}
+}
 vtkSmartPointer<vtkActor> CreatePlaneActor(vtkSmartPointer<vtkPolyDataMapper> mapper,vtkSmartPointer<vtkTexture> texture, double x, double y, double z, double rotx, double roty, double rotz, double R, double G, double B) {
 	vtkSmartPointer<vtkActor> actor =
 	    vtkSmartPointer<vtkActor>::New();
@@ -517,25 +603,29 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
                 renderer->AddActor(a);
 		actorCollection->AddItem(a);
 		}
+
 // If there is not an opening to the west, make a wall there.
             if(!current->youCanGoWest())  
 		{
-		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() + OFFSET, - 1 * current->getY(), 0, 0,0,0,1,0,0);
+		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() - OFFSET - 2, - 1 * current->getY(), 0, 0,0,0,1,0,0);
                 renderer->AddActor(a);
 		actorCollection->AddItem(a);
 		}
-            if(y == COLUMNS - 1)// && !current->youCanGoWest())
+
+            if(y == ROWS - 1 && !current->youCanGoSouth())
 		{
 		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,0,1,0);
                 renderer->AddActor(a);
 		actorCollection->AddItem(a);
 		}
-            if(x == 0)// && !current->youCanGoEast()) 
+
+            if(x == COLUMNS -1 && !current->youCanGoEast())
 		{
-		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() - 1 + OFFSET, -1 * current->getY(), 0, 0,0,0,1,0,0);
+		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() + OFFSET, -1 * current->getY(), 0, 0,0,0,1,0,0);
                 renderer->AddActor(a);
 		actorCollection->AddItem(a);
 		}
+
         }
     }
     actorCollection->InitTraversal();
@@ -554,7 +644,50 @@ int main(int argc,char *argv[])
 	std::vector<std::vector<Node*> > maze;
 	initMaze(maze);
 	vtkMath::RandomSeed(time(NULL));
-	generateMaze(maze, maze[0][0]);
+	//generateMaze(maze, maze[0][0]);
+	generateMaze2(maze);
+/*
+std::cout << "NORTH\n";
+for(int j = 0; j < COLUMNS; j++)
+	{
+	for(int i = 0; i < ROWS; i++)
+		{
+
+			std::cout << maze[j][i]->youCanGoNorth();
+		}	
+		std::cout << endl;
+	}
+std::cout << "SOUTH\n";
+for(int j = 0; j < COLUMNS; j++)
+	{
+	for(int i = 0; i < ROWS; i++)
+		{
+			std::cout << maze[j][i]->youCanGoSouth();
+		}	
+		std::cout << endl;
+	}
+
+std::cout << "WEST\n";
+for(int j = 0; j < COLUMNS; j++)
+	{
+	for(int i = 0; i < ROWS; i++)
+		{
+
+			std::cout << maze[j][i]->youCanGoWest();
+		}	
+		std::cout << endl;
+	}
+
+std::cout << "EAST\n";
+for(int j = 0; j < COLUMNS; j++)
+	{
+	for(int i = 0; i < ROWS; i++)
+		{
+			std::cout << maze[j][i]->youCanGoEast();
+		}	
+		std::cout << endl;
+	}
+*/
 	printMaze(maze, renderer,actorCollection);
 
   // Camera
