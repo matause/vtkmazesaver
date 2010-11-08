@@ -492,18 +492,11 @@ void generateMaze2(std::vector<std::vector<Node*> > & maze)
 
 		if(adjacentcells.size() == 0)
 		{
-			std::cout << CellStack.size() << " ";
 			current = CellStack.top();
 			CellStack.pop();
-			std::cout << CellStack.size() << "\n";
-			std::string z;
-	//		std::cin >> z;
 		}
 		else
 		{
-			std::cout << adjacentcells.size() << "  adjacent Cells\n";
-			std::string z;
-//			std::cin >> z;
 			i = i % adjacentcells.size();
 			if(x == adjacentcells[i]->getX())
 			{
