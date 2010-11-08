@@ -49,8 +49,8 @@ public:
 	}
     bool youCanGoSouth()
 	{
-	    if (_openEdges == 8 || _openEdges == 9 || _openEdges == 10 ||
-	        _openEdges == 12 || _openEdges == 11 || _openEdges == 13 || _openEdges == 14 || _openEdges == 15)
+	    if (_openEdges == S || _openEdges == S+N || _openEdges == S+E ||
+	        _openEdges == S+W || _openEdges == S+N+E || _openEdges == S+N+W || _openEdges == S+E+W || _openEdges == S+N+E+W)
 	        return true;
         else
 	        return false;
