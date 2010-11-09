@@ -452,8 +452,9 @@ if(finishedVisiting(maze,Current))
 	}
 	//if(!finishedVisiting(maze,Current)) generateMaze(maze,Current);
 }
-void generateMaze2(std::vector<std::vector<Node*> > & maze)
+std::vector <Node*> generateMaze2(std::vector<std::vector<Node*> > & maze)
 {
+	std::vector <Node*> solution;
 	Node * current = maze[0][0];
 	int visited = 1;
 	int total = ROWS * COLUMNS;
@@ -461,6 +462,7 @@ void generateMaze2(std::vector<std::vector<Node*> > & maze)
 	//CellStack.push(current);
 	while(visited < total)
 	{
+		solution.push_back(current);
 		current->visit();
 		int x = current->getX();
 		int y = current->getY();
@@ -530,7 +532,56 @@ void generateMaze2(std::vector<std::vector<Node*> > & maze)
 		}
 		
 	}
+	return solution;
 }
+
+//check if a given node should be added to the open list or updated
+void add_directions(std::vector<std::vector<Node*> > & maze, std::vector <Node*> &openlist, int x, int y, Node * Parent, Node * End)
+{
+	Node * current; //the new direction
+	if((x >= 0 && x < ROWS) &&
+		(y >= 0 && y < COLUMNS))
+		current = maze[y][x];
+	else return;
+	//ignore if the node is already on the closed list or is unreachable
+	if(current->visited())
+		return;
+	//if it's not open, add it to the open list and calculate G,H and F
+	openlist.push_back(current);
+	current->setH(End->getX(),End->getY());
+	current->setG(Parent->getG() + 1);
+}
+//Give this function the maze, a start and an end node and it will calculate the shortest path to the end node.
+void astar(std::vector<std::vector<Node*> > & maze, Node * Start, Node * End)
+{
+	for(int y = 0; y < COLUMNS; y++)
+		for(int x = 0; x < ROWS; x++)
+			maze[y][x]->unvisit();
+	std::vector <Node*> openlist;
+	add_directions(maze, openlist,Start->getX(),Start->getY(),Start, End);
+	while(openlist.size() > 0 && !End->visited())
+	{
+		unsigned int currentposition = 0;
+		Node * current = openlist[0];
+		for(unsigned int i = 1; i < openlist.size(); i++)
+			if(openlist[i]->getF() < current->getF())
+				{current = openlist[i]; currentposition = i;}
+	//Add any available directions to the open list
+	int x = current->getX(); int y = current->getY();
+	if(current->youCanGoNorth())
+		add_directions(maze, openlist,x,y-1,current, End);
+	if(current->youCanGoEast())
+		add_directions(maze,openlist,x+1,y,current,End);
+	if(current->youCanGoWest())
+		add_directions(maze,openlist,x-1,y,current,End);
+	if(current->youCanGoSouth())
+		add_directions(maze,openlist,x,y+1,current,End);
+	//move current node to closed list
+	openlist.erase(openlist.begin() + currentposition);
+	current->visit();
+	}
+}
+
 vtkSmartPointer<vtkActor> CreatePlaneActor(vtkSmartPointer<vtkPolyDataMapper> mapper,vtkSmartPointer<vtkTexture> texture, double x, double y, double z, double rotx, double roty, double rotz, double R, double G, double B) {
 	vtkSmartPointer<vtkActor> actor =
 	    vtkSmartPointer<vtkActor>::New();
@@ -681,6 +732,17 @@ for(int j = 0; j < COLUMNS; j++)
 		std::cout << endl;
 	}
 */
+astar(maze, maze[0][0], maze[COLUMNS-1][ROWS-1]);
+std::cout << "Shortest Path\n";
+for(int j = 0; j < COLUMNS; j++)
+	{
+	for(int i = 0; i < ROWS; i++)
+		{
+
+			std::cout << maze[j][i]->getF() << "\t";
+		}	
+		std::cout << endl;
+	}
 	printMaze(maze, renderer,actorCollection);
 
   // Camera
