@@ -11,16 +11,22 @@ private:
 	int _h;//heuristic
 	bool _visited;
 	unsigned int _openEdges;
+	Node * _parent;
+	Node * _child;
 public:
 	Node() {_x = 0; _y = 0; _openEdges = 0; _visited = false;}
-	Node(int x, int y) {_x = x; _y = y; _openEdges = 0; _visited = false; _g = 0; _h= 100;}
+	Node(int x, int y) {_x = x; _y = y; _openEdges = 0; _visited = false; _g = 100; _h= 100;}
 	int getX() {return _x;}
 	int getY() {return _y;}
-	int setG(int g) {if(g < _g) _g=g; return _g;}
+	bool setG(int g) {if(g < _g) _g=g; else return false; return true;}
 	int getG() {return _g;}
 	int setH(int x, int y) {_h = abs( _x - x) + abs(_y - y); return _h;}
 	int getH() {return _h;}
 	int getF() {return _g + _h;}
+	void setParent(Node * parent) {_parent=parent;}
+	Node * getParent() {return _parent;}
+	void setChild(Node * child) {_child=child;}
+	Node * getChild() {return _child;}
 	void addEdge(unsigned int openEdges) {_openEdges = openEdges;}
 	void visit() {_visited = true;}
 	void unvisit() {_visited = false;}

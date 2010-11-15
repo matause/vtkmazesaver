@@ -549,7 +549,13 @@ void add_directions(std::vector<std::vector<Node*> > & maze, std::vector <Node*>
 	//if it's not open, add it to the open list and calculate G,H and F
 	openlist.push_back(current);
 	current->setH(End->getX(),End->getY());
-	current->setG(Parent->getG() + 1);
+	if(current->setG(Parent->getG() + 1))
+	{
+		if(current != Parent)
+		{
+		current->setParent(Parent);
+		}
+	}
 }
 //Give this function the maze, a start and an end node and it will calculate the shortest path to the end node.
 void astar(std::vector<std::vector<Node*> > & maze, Node * Start, Node * End)
@@ -557,6 +563,7 @@ void astar(std::vector<std::vector<Node*> > & maze, Node * Start, Node * End)
 	for(int y = 0; y < COLUMNS; y++)
 		for(int x = 0; x < ROWS; x++)
 			maze[y][x]->unvisit();
+	Start->setG(0);
 	std::vector <Node*> openlist;
 	add_directions(maze, openlist,Start->getX(),Start->getY(),Start, End);
 	while(openlist.size() > 0 && !End->visited())
@@ -580,6 +587,24 @@ void astar(std::vector<std::vector<Node*> > & maze, Node * Start, Node * End)
 	openlist.erase(openlist.begin() + currentposition);
 	current->visit();
 	}
+	Node * current = End;
+	while(current && current != Start)
+		{
+		std::cout<< current->getX() << " " << current->getY() << std::endl;
+		current->getParent()->setChild(current);
+		current = current->getParent();	
+		}
+	std::cout << "Shortest Path (Start->Finish)\n";
+	int steps = 0;	
+	current = Start;
+	std::cout<< current->getX() << " " << current->getY() << std::endl;
+	while(current && current != End)
+	{
+		current = current->getChild();
+		std::cout<< current->getX() << " " << current->getY() << std::endl;
+		steps++;
+	}
+	std::cout << "It takes " << steps << " steps to complete the maze\n";
 }
 
 vtkSmartPointer<vtkActor> CreatePlaneActor(vtkSmartPointer<vtkPolyDataMapper> mapper,vtkSmartPointer<vtkTexture> texture, double x, double y, double z, double rotx, double roty, double rotz, double R, double G, double B) {
