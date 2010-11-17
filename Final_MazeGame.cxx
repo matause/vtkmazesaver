@@ -70,116 +70,20 @@ Command Line Arguments:
 class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
 {
   private:
-	vtkSmartPointer<vtkActor> ControlActor;  //Player
-	vtkSmartPointer<vtkActor> EndActor;      //End Condition
 	vtkSmartPointer<vtkCamera> Camera;
-	vtkSmartPointer<vtkPolyData> Cube;
-	vtkSmartPointer<vtkPolyData> Sphere;
-	std::vector <vtkSmartPointer<vtkActor> > MazeBlocks;
 	vtkActorCollection * actorCollection;
-	bool End;
-	bool topUnitCircle;
-	double VELOCITY;
+	std::vector<std::vector<Node*> > tempMaze;
   public:
     static KeyPressInteractorStyle* New();
     vtkTypeMacro(KeyPressInteractorStyle, vtkInteractorStyleTrackballCamera);
-    void SetControlActor(vtkSmartPointer<vtkActor> actor, vtkSmartPointer<vtkPolyData> sphereSource)
-    {
-        ControlActor = actor;
-        Sphere = sphereSource;
-        VELOCITY = 0;
-    }
-    void SetCamera(vtkSmartPointer<vtkCamera> c, vtkActorCollection * ac)
+
+    void SetCamera(vtkSmartPointer<vtkCamera> c, vtkActorCollection * ac, std::vector<std::vector<Node*> > &nodes)
     {
         Camera = c;
         actorCollection = ac;
-        topUnitCircle = true;
+        tempMaze = nodes;
     }
-    //checks if actor is intersecting with maze or end condition
-    //returns true if it is intersecting, and false otherwise
-    bool isinside(vtkSmartPointer<vtkActor> actor) {
-        double * SphereBounds = ControlActor->GetBounds();
-        double Xmin = SphereBounds[0];
-        double Xmax = SphereBounds[1];
-        double Ymin = SphereBounds[2];
-        double Ymax = SphereBounds[3];
-        double * EndBounds = EndActor->GetBounds();
-        //The player has reached the end.
-        if((Xmin > EndBounds[0] && Xmin < EndBounds[1] ||
-            Xmax > EndBounds[0] && Xmax < EndBounds[1]) &&
-            (Ymin > EndBounds[2] && Ymin < EndBounds[3] ||
-            Ymax > EndBounds[2] && Ymax < EndBounds[3]))
-        {
-              // Setup the text and add it to the window
-            vtkSmartPointer<vtkCornerAnnotation> cornerAnnotation =
-                  vtkSmartPointer<vtkCornerAnnotation>::New();
-            cornerAnnotation->SetLinearFontScaleFactor( 2 );
-            cornerAnnotation->SetNonlinearFontScaleFactor( 1 );
-            cornerAnnotation->SetMaximumFontSize( 20 );
-            cornerAnnotation->SetText( 2, "TheEnd" );
-            cornerAnnotation->GetTextProperty()->SetColor( 1,0,0);
 
-            this->Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer()->AddViewProp(cornerAnnotation);
-            ControlActor->GetProperty()->SetColor(0,1,0);
-            End = true;
-            return true;
-        }
-        //Check for collisions
-        for(int i = 0; i < MazeBlocks.size(); i++) {
-            double * CubeBounds = MazeBlocks[i]->GetBounds();
-            if((Xmin > CubeBounds[0] && Xmin < CubeBounds[1] ||
-                Xmax > CubeBounds[0] && Xmax < CubeBounds[1]) &&
-                (Ymin > CubeBounds[2] && Ymin < CubeBounds[3] ||
-                Ymax > CubeBounds[2] && Ymax < CubeBounds[3]))
-            {
-                //SPLAT - Change cube color to player color and assign a new color to player for a splat effect
-                MazeBlocks[i]->GetProperty()->SetColor(ControlActor->GetProperty()->GetColor());
-                ControlActor->GetProperty()->SetColor(vtkMath::Random(0.5,1.0),vtkMath::Random(0.5,1.0),vtkMath::Random(0.5,1.0));
-                VELOCITY = 0;
-                return true;
-            }
-        }
-        return false;
-	}
-//Almost got collision detection working the "right" way shown in class but
-//came across issues since the polydata was coming from the source, not actor
-//and there were many actors based on the same source.
-/*
-    vtkPolyData* polydata = vtkPolyData::SafeDownCast(MazeBlocks[i]->GetMapper()->GetInputAsDataSet());
-    vtkSmartPointer<vtkTransform> transform =
-      vtkSmartPointer<vtkTransform>::New();
-    transform->SetMatrix(MazeBlocks[i]->GetMatrix());
-
-    vtkSmartPointer<vtkTransformPolyDataFilter> transformPolyData =
-      vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-    transformPolyData->SetInputConnection(polydata->GetProducerPort());
-    transformPolyData->SetTransform(transform);
-    transformPolyData->Update();
-
-    vtkSmartPointer<vtkSelectEnclosedPoints> selectEnclosedPoints =
-      vtkSmartPointer<vtkSelectEnclosedPoints>::New();
-	selectEnclosedPoints->SetInput(transformPolyData->GetOutput());
-	selectEnclosedPoints->SetSurface(Sphere);
-	selectEnclosedPoints->Update();
-
-
-    vtkDataArray* insideArray = vtkDataArray::SafeDownCast(selectEnclosedPoints->GetOutput()->GetPointData()->GetArray(1));
-std::cout << "InsideArray:\n";
-	for(vtkIdType i = 0; i < insideArray->GetNumberOfTuples(); i++)
-	{
-	std::cout << insideArray->GetComponent(i,0) << std::endl;
-	if(insideArray->GetComponent(i,0) == 1)
-		{
-		std::cout << "Inside\n";
-		//return true;
-		}
-	}
-	}
-	std::cout << "Not Inside\n";
-	return false;
-
-      }
-*/
     //Handles Keypresses
     virtual void OnKeyPress()
     {
@@ -199,85 +103,61 @@ std::cout << "InsideArray:\n";
         double yLook = yFocus - yPosition;
         double angle;
 
+//////
+
+        // Calculate the new position we will be at after moving
+
+        // If the new position is in a valid region for that node, move there
+
+
         // Be careful not to divide by zero! If x is close enough to zero, we will just call it zero
         // and set the angle to Pi/2.
         if (fabs(xLook) > 0.0001)
         {
             angle = atan(yLook / xLook);
-            std::cout << "*Set the angle using atan" << std::endl;
-        }
-        else if (yLook > 0)
-        {
-            angle = PI / 2;
-            std::cout << "*Set the angle explicitly to PI / 2" << std::endl;
         }
         else
         {
             angle = PI / 2;
-            std::cout << "*Set the angle explicitly to PI / 2" << std::endl;
         }
 
         if (xLook < 0)
         {
-            std::cout << "*Added PI to the angle" << std::endl;
             angle = PI + angle;
         }
-
+        /*
         std::cout << "BEFORE MOVEMENT\n";
         std::cout << "Camera position: (" << xPosition << ", " << yPosition << ")." << std::endl;
         std::cout << "Focal position:  (" << xFocus << ", " << yFocus << ")." << std::endl;
         std::cout << "Look direction:  (" << xLook << ", " << yLook << ")." << std::endl;
         std::cout << "Angle:           " << angle << "\n" <<std::endl;
-
+        */
         // Handles the arrow keys and moves the Player accordingly
         if(key.compare("Up") == 0)
         {
-            std::cout << "*Up" << std::endl;
             Camera->SetPosition(xPosition + MOVEINCREMENT*(xLook), yPosition + MOVEINCREMENT*(yLook), 0);
-            /*
-            if(VELOCITY <= MAXVELOCITY)
-            VELOCITY += ACCELERATION;
-            ControlActor->SetPosition(x,y+VELOCITY,z);
-            */
         }
         if(key.compare("Down") == 0)
         {
-            std::cout << "*Down" << std::endl;
             Camera->SetPosition(xPosition - MOVEINCREMENT*(xLook), yPosition - MOVEINCREMENT*(yLook), 0);
-            /*
-            if(VELOCITY <= MAXVELOCITY)
-            VELOCITY += ACCELERATION;
-            ControlActor->SetPosition(x,y-VELOCITY,z);
-            */
         }
         if(key.compare("Right") == 0)
         {
-            std::cout << "*Right" << std::endl;
             angle -= ANGLEINCREMENT;
         }
         if(key.compare("Left") == 0)
         {
-            std::cout << "*Left" << std::endl;
             angle += ANGLEINCREMENT;
         }
 
         if (angle > 2*PI)
         {
-            std::cout << "*Angle was " << angle;
             angle -= 2*PI;
-            std::cout << " and is now " << angle << std::endl;
         }
         else if (angle < 0)
         {
-            std::cout << "*Angle was " << angle;
             angle += 2*PI;
-            std::cout << " and is now " << angle << std::endl;
         }
-
-        /*if (angle < 0 || angle > PI)
-            topUnitCircle = false;
-        else
-            topUnitCircle = true;*/
 
         p = Camera->GetPosition();
         xPosition = p[0];
@@ -285,38 +165,16 @@ std::cout << "InsideArray:\n";
 
         Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
 
-        //If the player is colliding with something,
-
-        p = Camera->GetPosition();
-        xPosition = p[0];
-        yPosition = p[1];
-        f = Camera->GetFocalPoint();
-        xFocus = f[0];
-        yFocus = f[1];
-
-        xLook = xFocus - xPosition;
-        yLook = yFocus - yPosition;
-
-        if (xLook != 0)
-            angle = atan(yLook / xLook);
-        else if (yLook > 0)
-            angle = PI;
-        else
-            angle = -PI;
-
-        std::cout << "AFTER MOVEMENT\n";
-        std::cout << "Camera position: (" << xPosition << ", " << yPosition << ")." << std::endl;
-        std::cout << "Focal position:  (" << xFocus << ", " << yFocus << ")." << std::endl;
-        std::cout << "Look direction:  (" << xLook << ", " << yLook << ")." << std::endl;
-        std::cout << "Angle:           " << angle <<std::endl;
-        std::cout << "cos(angle):      " << cos(angle) <<std::endl;
-        std::cout << "sin(angle):      " << sin(angle) << "\n" <<std::endl;
-
+        // Determine the current node in which we are located
+        int row = -yPosition;
+        int col = xPosition;
+        std::cout << "X: " << xPosition << " Y: " << yPosition << std::endl;
+        std::cout << "col: " << tempMaze[col][row]->getX() << " row: " << tempMaze[col][row]->getY() << std::endl;
 
         this->Interactor->GetRenderWindow()->Render();
     }
-
 };
+
 vtkStandardNewMacro(KeyPressInteractorStyle);
 
 void initMaze(std::vector<std::vector<Node*> > & maze)
@@ -339,7 +197,7 @@ bool finishedVisiting(std::vector<std::vector<Node*> > & maze, Node * & Current)
 		if(!maze[y+1][x]->visited()  && !Current->youCanGoSouth())
 			{
 				return false;
-			}			
+			}
 		}
 	if(y > 0)
 		{
@@ -362,14 +220,14 @@ bool finishedVisiting(std::vector<std::vector<Node*> > & maze, Node * & Current)
 		if(!maze[y][x-1]->visited()  && !Current->youCanGoEast())
 			{
 				return false;
-			}	
+			}
 	  	}
 	return true;
 }
 void generateMaze(std::vector<std::vector<Node*> > & maze, Node * & Current)
 {
 	if(finishedVisiting(maze,Current)) return;
-	//vtkSmartPointer<vtkMinimalStandardRandomSequence> sequence = 
+	//vtkSmartPointer<vtkMinimalStandardRandomSequence> sequence =
 	//    vtkSmartPointer<vtkMinimalStandardRandomSequence>::New();
 	// initialize the sequence
 	//sequence->SetSeed(1);
@@ -387,15 +245,15 @@ void generateMaze(std::vector<std::vector<Node*> > & maze, Node * & Current)
 			if(y < COLUMNS - 1)
 			{
 				if(!maze[y+1][x]->visited()  && !Current->youCanGoSouth())
-				{	
+				{
 					maze[y+1][x]->removeNorthWall();
 					Current->removeSouthWall();
 					generateMaze(maze,maze[y+1][x]);
 if(finishedVisiting(maze,Current))
 					found = true;
 				}
-				
-				
+
+
 			}
 	  	}
 		if(i >= 25 && i < 50)
@@ -411,8 +269,8 @@ if(finishedVisiting(maze,Current))
 if(finishedVisiting(maze,Current))
 					found = true;
 				}
-				
-				
+
+
 			}
 	  	}
 		if(i >= 50 && i < 75)
@@ -429,10 +287,10 @@ if(finishedVisiting(maze,Current))
 if(finishedVisiting(maze,Current))
 					found = true;
 				}
-				
-				
+
+
 			}
-		
+
 	  	}
 		if(i >= 75 && i <100)
 		{
@@ -469,7 +327,7 @@ std::vector <Node*> generateMaze2(std::vector<std::vector<Node*> > & maze)
 		std::vector <Node*> adjacentcells;
 		int i = (int) vtkMath::Random(0.0,100.0);
 		//North
-		if(y > 0) 
+		if(y > 0)
 		{
 			if(!maze[y-1][x]->visited())
 				adjacentcells.push_back(maze[y-1][x]);
@@ -530,7 +388,7 @@ std::vector <Node*> generateMaze2(std::vector<std::vector<Node*> > & maze)
 			CellStack.push(current);
 			current = adjacentcells[i];
 		}
-		
+
 	}
 	return solution;
 }
@@ -592,10 +450,10 @@ void astar(std::vector<std::vector<Node*> > & maze, Node * Start, Node * End)
 		{
 		std::cout<< current->getX() << " " << current->getY() << std::endl;
 		current->getParent()->setChild(current);
-		current = current->getParent();	
+		current = current->getParent();
 		}
 	std::cout << "Shortest Path (Start->Finish)\n";
-	int steps = 0;	
+	int steps = 0;
 	current = Start;
 	std::cout<< current->getX() << " " << current->getY() << std::endl;
 	while(current && current != End)
@@ -666,7 +524,7 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
         {
             Node * current = maze[y][x];
 		// If there is not an opening to the north, make a wall there.
-            if(!current->youCanGoNorth()) 
+            if(!current->youCanGoNorth())
 		{
 		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX(), - 1 * current->getY() + OFFSET,0,0,0,90, 0,1,0);
                 renderer->AddActor(a);
@@ -674,7 +532,7 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
 		}
 
 // If there is not an opening to the west, make a wall there.
-            if(!current->youCanGoWest())  
+            if(!current->youCanGoWest())
 		{
 		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() - OFFSET - 2, - 1 * current->getY(), 0, 0,0,0,1,0,0);
                 renderer->AddActor(a);
@@ -723,7 +581,7 @@ for(int j = 0; j < COLUMNS; j++)
 		{
 
 			std::cout << maze[j][i]->youCanGoNorth();
-		}	
+		}
 		std::cout << endl;
 	}
 std::cout << "SOUTH\n";
@@ -732,7 +590,7 @@ for(int j = 0; j < COLUMNS; j++)
 	for(int i = 0; i < ROWS; i++)
 		{
 			std::cout << maze[j][i]->youCanGoSouth();
-		}	
+		}
 		std::cout << endl;
 	}
 
@@ -743,7 +601,7 @@ for(int j = 0; j < COLUMNS; j++)
 		{
 
 			std::cout << maze[j][i]->youCanGoWest();
-		}	
+		}
 		std::cout << endl;
 	}
 
@@ -753,7 +611,7 @@ for(int j = 0; j < COLUMNS; j++)
 	for(int i = 0; i < ROWS; i++)
 		{
 			std::cout << maze[j][i]->youCanGoEast();
-		}	
+		}
 		std::cout << endl;
 	}
 */
@@ -763,9 +621,8 @@ for(int j = 0; j < COLUMNS; j++)
 	{
 	for(int i = 0; i < ROWS; i++)
 		{
-
 			std::cout << maze[j][i]->getF() << "\t";
-		}	
+		}
 		std::cout << endl;
 	}
 	printMaze(maze, renderer,actorCollection);
@@ -783,7 +640,7 @@ for(int j = 0; j < COLUMNS; j++)
 //Keyboard Style
   vtkSmartPointer<KeyPressInteractorStyle> keystyle =
 	    vtkSmartPointer<KeyPressInteractorStyle>::New();
-  keystyle->SetCamera(camera, actorCollection);
+  keystyle->SetCamera(camera, actorCollection, maze);
   renderWindowInteractor->SetInteractorStyle(keystyle);
 
   vtkSmartPointer<vtkInteractorStyleTrackballCamera> style =
