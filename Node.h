@@ -1,3 +1,6 @@
+#ifndef NODE_H
+#define NODE_H
+
 #include <math.h>
 #define N 1
 #define S 2
@@ -69,3 +72,5 @@ public:
 	        return false;
 	}
 };
+
+#endif
