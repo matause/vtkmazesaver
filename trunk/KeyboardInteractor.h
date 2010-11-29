@@ -10,6 +10,8 @@
 #define MOVEINCREMENT 0.2
 #define ANGLEINCREMENT PI/24
 
+#define COLLISIONBUFFER .4
+
 // Define interaction style
 class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
 {
@@ -79,11 +81,37 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
         // Handles the arrow keys and moves the Player accordingly
         if(key.compare("Up") == 0)
         {
-            Camera->SetPosition(xPosition + MOVEINCREMENT*(xLook), yPosition + MOVEINCREMENT*(yLook), 0);
+            double newX = xPosition + MOVEINCREMENT*(xLook);
+            double newY = yPosition + MOVEINCREMENT*(yLook);
+            int row = -yPosition;
+            int col = xPosition;
+            if(!tempMaze[row][col]->youCanGoWest() && newX < col - COLLISIONBUFFER)
+		newX = col - COLLISIONBUFFER;
+            else if(!tempMaze[row][col]->youCanGoEast() && newX > col + COLLISIONBUFFER)
+		newX = col + COLLISIONBUFFER;
+            if(!tempMaze[row][col]->youCanGoNorth() && newY > -row + COLLISIONBUFFER)
+		newY = -row + COLLISIONBUFFER;
+            else if(!tempMaze[row][col]->youCanGoSouth() && newY < -row - .4)
+		newY = -row - COLLISIONBUFFER;
+            
+            Camera->SetPosition(newX, newY, 0);
         }
         if(key.compare("Down") == 0)
         {
-            Camera->SetPosition(xPosition - MOVEINCREMENT*(xLook), yPosition - MOVEINCREMENT*(yLook), 0);
+            double newX = xPosition - MOVEINCREMENT*(xLook);
+            double newY = yPosition - MOVEINCREMENT*(yLook);
+            int row = -yPosition;
+            int col = xPosition;
+            if(!tempMaze[row][col]->youCanGoWest() && newX < col - COLLISIONBUFFER)
+		newX = col - COLLISIONBUFFER;
+            else if(!tempMaze[row][col]->youCanGoEast() && newX > col + COLLISIONBUFFER)
+		newX = col + COLLISIONBUFFER;
+            if(!tempMaze[row][col]->youCanGoNorth() && newY > -row + COLLISIONBUFFER)
+		newY = -row + COLLISIONBUFFER;
+            else if(!tempMaze[row][col]->youCanGoSouth() && newY < -row - COLLISIONBUFFER)
+		newY = -row - COLLISIONBUFFER;
+            
+            Camera->SetPosition(newX, newY, 0);
         }
         if(key.compare("Right") == 0)
         {
@@ -108,14 +136,15 @@ class KeyPressInteractorStyle : public vtkInteractorStyleTrackballCamera
         yPosition = p[1];
 
         Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
-
+/*
         // Determine the current node in which we are located
         int row = -yPosition;
         int col = xPosition;
         std::cout << "X: " << xPosition << " Y: " << yPosition << std::endl;
         std::cout << "col: " << tempMaze[row][col]->getX() << " row: " << tempMaze[row][col]->getY() << std::endl;
-
+*/	
         this->Interactor->GetRenderWindow()->Render();
+
     }
 };
 
