@@ -48,6 +48,7 @@ Command Line Arguments:
 #include <vtkOrientationMarkerWidget.h>
 #include <vtkActorCollection.h>
 
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -57,6 +58,7 @@ Command Line Arguments:
 
 #include "Node.h"
 #include "KeyboardInteractor.h"
+#include "vtkTimerCallback.h"
 
 #define ROWS 10
 #define COLUMNS 10
@@ -549,6 +551,20 @@ for(int j = 0; j < COLUMNS; j++)
     widget->SetEnabled( 1 );
     widget->InteractiveOn();
 
+
+  // Initialize must be called prior to creating timer events.
+  renderWindowInteractor->Initialize();
+ 
+  // Sign up to receive TimerEvent
+  vtkSmartPointer<vtkTimerCallback> cb = 
+    vtkSmartPointer<vtkTimerCallback>::New();
+  renderWindowInteractor->AddObserver(vtkCommand::TimerEvent, cb);
+  cb->setMaze(maze);
+ 
+  int timerId = renderWindowInteractor->CreateRepeatingTimer(100);
+  std::cout << "timerId: " << timerId << std::endl;  
+ 
+  // Start the interaction and timer
   //Render and interact
   renderWindow->Render();
   renderWindowInteractor->Start();
