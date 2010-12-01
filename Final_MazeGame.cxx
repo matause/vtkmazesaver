@@ -42,7 +42,8 @@ Command Line Arguments:
 #include <vtkCameraActor.h>
 #include <vtkMath.h>
 #include <vtkImageData.h>
-#include <vtkJPEGReader.h>
+//#include <vtkJPEGReader.h>
+#include <vtkPNGReader.h>
 #include <vtkTextureMapToPlane.h>
 #include <vtkAxesActor.h>
 #include <vtkOrientationMarkerWidget.h>
@@ -65,7 +66,9 @@ Command Line Arguments:
 
 #define OFFSET -.5
 
-#define TEXTURE1 "texture1.jpg"
+#define WALLTEXTURE "Brick.png"
+#define FLOORTEXTURE "Dirt.png"
+#define CEILINGTEXTURE "Cement.png"
 
 void initMaze(std::vector<std::vector<Node*> > & maze)
 {
@@ -301,7 +304,7 @@ void add_directions(std::vector<std::vector<Node*> > & maze, std::vector <Node*>
 	{
 		if(current != Parent)
 		{
-		current->setParent(Parent);
+            current->setParent(Parent);
 		}
 	}
 }
@@ -373,31 +376,45 @@ vtkSmartPointer<vtkActor> CreatePlaneActor(vtkSmartPointer<vtkPolyDataMapper> ma
 
 void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRenderer> &renderer,   vtkActorCollection * &actorCollection)
 {
-
+/*
   vtkSmartPointer<vtkJPEGReader> jPEGReader =
     vtkSmartPointer<vtkJPEGReader>::New();
   jPEGReader->SetFileName ( TEXTURE1 );
+*/
+    // Load the textures for the walls, floor, and ceiling
+    vtkSmartPointer<vtkPNGReader> wallTextureSource = vtkSmartPointer<vtkPNGReader>::New();
+    wallTextureSource->SetFileName(WALLTEXTURE);
 
-  //Create a plane
-  vtkSmartPointer<vtkPlaneSource> planeSource =
-    vtkSmartPointer<vtkPlaneSource>::New();
-//    planeSource->SetPoint1(0,0,0);
-//    planeSource->SetPoint2(1,1,1);
-  planeSource->SetCenter(1.0, 0.0, 0.0);
-  planeSource->SetNormal(1.0, 0.0, 0.0);
+    vtkSmartPointer<vtkPNGReader> floorTextureSource = vtkSmartPointer<vtkPNGReader>::New();
+    floorTextureSource->SetFileName(FLOORTEXTURE);
 
-  // Apply the texture
-  vtkSmartPointer<vtkTexture> texture =
-    vtkSmartPointer<vtkTexture>::New();
-  texture->SetInput(jPEGReader->GetOutput());
+    vtkSmartPointer<vtkPNGReader> ceilingTextureSource = vtkSmartPointer<vtkPNGReader>::New();
+    ceilingTextureSource->SetFileName(CEILINGTEXTURE);
 
-  vtkSmartPointer<vtkTextureMapToPlane> texturePlane =
-    vtkSmartPointer<vtkTextureMapToPlane>::New();
-  texturePlane->SetInput(planeSource->GetOutput());
+    //Create a plane
+    vtkSmartPointer<vtkPlaneSource> planeSource =
+        vtkSmartPointer<vtkPlaneSource>::New();
+    planeSource->SetCenter(1.0, 0.0, 0.0);
+    planeSource->SetNormal(1.0, 0.0, 0.0);
 
-  vtkSmartPointer<vtkPolyDataMapper> mapper =
-    vtkSmartPointer<vtkPolyDataMapper>::New();
-  mapper->SetInputConnection(texturePlane->GetOutputPort());
+    // Apply the textures
+    vtkSmartPointer<vtkTexture> wallTexture = vtkSmartPointer<vtkTexture>::New();
+    wallTexture->SetInput(wallTextureSource->GetOutput());
+
+    vtkSmartPointer<vtkTexture> floorTexture = vtkSmartPointer<vtkTexture>::New();
+    floorTexture->SetInput(floorTextureSource->GetOutput());
+
+    vtkSmartPointer<vtkTexture> ceilingTexture = vtkSmartPointer<vtkTexture>::New();
+    ceilingTexture->SetInput(ceilingTextureSource->GetOutput());
+
+    // Other things
+    vtkSmartPointer<vtkTextureMapToPlane> texturePlane =
+        vtkSmartPointer<vtkTextureMapToPlane>::New();
+    texturePlane->SetInput(planeSource->GetOutput());
+
+    vtkSmartPointer<vtkPolyDataMapper> mapper =
+        vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputConnection(texturePlane->GetOutputPort());
 
 
  /*
@@ -405,44 +422,54 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
     vtkSmartPointer<vtkActor>::New();
   actor->SetMapper(mapper);*/
 
-
-  //Add the actors to the scene
-//  renderer->AddActor(actor);
+    // Create the walls, floor, and ceiling of the maze
 	for(int y=0; y < COLUMNS; y++)
     {
 		for(int x=0; x < ROWS; x++)
         {
             Node * current = maze[y][x];
-		// If there is not an opening to the north, make a wall there.
+
+            // If there is not an opening to the north, make a wall there.
             if(!current->youCanGoNorth())
-		{
-		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX(), - 1 * current->getY() + OFFSET,0,0,0,90, 0,1,0);
+            {
+                vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, wallTexture, current->getX(), - 1 * current->getY() + OFFSET,0,0,0,90, 1,1,1);
                 renderer->AddActor(a);
-		actorCollection->AddItem(a);
-		}
+                actorCollection->AddItem(a);
+            }
 
-// If there is not an opening to the west, make a wall there.
+            // If there is not an opening to the west, make a wall there.
             if(!current->youCanGoWest())
-		{
-		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() - OFFSET - 2, - 1 * current->getY(), 0, 0,0,0,1,0,0);
+            {
+                vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, wallTexture, current->getX() - OFFSET - 2, - 1 * current->getY(), 0, 0,0,0,1,1,1);
                 renderer->AddActor(a);
-		actorCollection->AddItem(a);
-		}
+                actorCollection->AddItem(a);
+            }
 
+            // If there is not an opening to the south, make a wall there (last row only).
             if(y == ROWS - 1 && !current->youCanGoSouth())
-		{
-		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,0,1,0);
+            {
+                vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, wallTexture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,1,1,1);
                 renderer->AddActor(a);
-		actorCollection->AddItem(a);
-		}
+                actorCollection->AddItem(a);
+            }
 
+            // If there is not an opening to the east, make a wall there (last column only).
             if(x == COLUMNS -1 && !current->youCanGoEast())
-		{
-		vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, texture, current->getX() + OFFSET, -1 * current->getY(), 0, 0,0,0,1,0,0);
+            {
+                vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, wallTexture, current->getX() + OFFSET, -1 * current->getY(), 0, 0,0,0,1,1,1);
                 renderer->AddActor(a);
-		actorCollection->AddItem(a);
-		}
+                actorCollection->AddItem(a);
+            }
 
+            // Create the floor
+            vtkSmartPointer<vtkActor> b = CreatePlaneActor(mapper, floorTexture, current->getX(), current->getY(), -OFFSET, 90,0,0,1,1,1);
+            renderer->AddActor(b);
+            actorCollection->AddItem(b);
+
+            // Create the ceiling
+            vtkSmartPointer<vtkActor> c = CreatePlaneActor(mapper, ceilingTexture, current->getX(), current->getY(), OFFSET, -90,0,0,1,1,1);
+            renderer->AddActor(c);
+            actorCollection->AddItem(c);
         }
     }
     actorCollection->InitTraversal();
@@ -554,16 +581,16 @@ for(int j = 0; j < COLUMNS; j++)
 
   // Initialize must be called prior to creating timer events.
   renderWindowInteractor->Initialize();
- 
+
   // Sign up to receive TimerEvent
-  vtkSmartPointer<vtkTimerCallback> cb = 
+  vtkSmartPointer<vtkTimerCallback> cb =
     vtkSmartPointer<vtkTimerCallback>::New();
-  renderWindowInteractor->AddObserver(vtkCommand::TimerEvent, cb);
+  //renderWindowInteractor->AddObserver(vtkCommand::TimerEvent, cb); //PUT THIS LINE BACK IN FOR AUTOMATED MOTION
   cb->setMaze(maze);
   cb->setCamera(camera, renderWindowInteractor);
   int timerId = renderWindowInteractor->CreateRepeatingTimer(10);
-  std::cout << "timerId: " << timerId << std::endl;  
- 
+  std::cout << "timerId: " << timerId << std::endl;
+
   // Start the interaction and timer
   //Render and interact
   renderWindow->Render();
