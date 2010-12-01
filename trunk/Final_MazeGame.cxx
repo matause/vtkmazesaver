@@ -560,8 +560,8 @@ for(int j = 0; j < COLUMNS; j++)
     vtkSmartPointer<vtkTimerCallback>::New();
   renderWindowInteractor->AddObserver(vtkCommand::TimerEvent, cb);
   cb->setMaze(maze);
- 
-  int timerId = renderWindowInteractor->CreateRepeatingTimer(100);
+  cb->setCamera(camera, renderWindowInteractor);
+  int timerId = renderWindowInteractor->CreateRepeatingTimer(10);
   std::cout << "timerId: " << timerId << std::endl;  
  
   // Start the interaction and timer
