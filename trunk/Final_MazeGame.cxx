@@ -363,6 +363,7 @@ vtkSmartPointer<vtkActor> CreatePlaneActor(vtkSmartPointer<vtkPolyDataMapper> ma
 	    vtkSmartPointer<vtkActor>::New();
 	actor->SetMapper(mapper);
 	actor->SetTexture(texture);
+	actor->GetProperty()->SetAmbient(100);
 
 	//Transform
 	actor->SetPosition(x,y,z);
