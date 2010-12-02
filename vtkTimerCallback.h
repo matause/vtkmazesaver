@@ -7,7 +7,8 @@
 #include <vector>
 #include "Node.h"
 
-#define MOVESPEED .01
+#define MOVESPEED .02
+#define ANGLESPEED .02
 
 class vtkTimerCallback : public vtkCommand
 {
@@ -45,8 +46,10 @@ class vtkTimerCallback : public vtkCommand
         double * p = Camera->GetPosition();
         double xPosition = p[0];
         double yPosition = p[1];
+	std::cout << "(X,Y): " << xPosition << "," << yPosition << std::endl;
 	int row = -yPosition;
 	int col = xPosition;
+	std::cout << "(C,R): " << col << "," << row << std::endl;
         double * f = Camera->GetFocalPoint();
         double xFocus = f[0];
         double yFocus = f[1];
@@ -74,52 +77,15 @@ class vtkTimerCallback : public vtkCommand
 		next = maze[row][col]->getChild();
 	else if(current->getParent())
 		next = maze[row][col]->getParent();
+	//std::cout << "[C,R]: " << current->getX() << "," << current->getY() << std::endl;
 /*
-	//Go West
-	if(current->getX() > next->getX() || current->getX() < col)
-	{
-		std::cout << "W\n";
-		std::cout << "Y " << yFocus << " " << next->getY() <<" "<<fabs(yFocus - (double) next->getY()) << std::endl;
-		std::cout << "X " << current->getX() << " " << xFocus << std::endl;
-		if(fabs(-yFocus - (double) next->getY()) < 0.01 && current->getX() > xFocus)
-		{
-			Camera->SetPosition(xPosition- MOVESPEED,yPosition,0);
-		        Camera->SetFocalPoint(xFocus - MOVESPEED, yFocus, 0);
-		}
-		else
-		{
-			angle -= .01;
-		        Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
-		if(fabs(-yFocus - (double) next->getY()) < 0.01 && current->getX() > xFocus)
-			        Camera->SetFocalPoint(next->getX(), next->getY(), 0);
-		}
-	}
-	//Go North
-	else if(current->getY() > next->getY() || current->getY() < row)
-	{
-		std::cout <<"\nN\n"<< (fabs(xFocus - (double)next->getX())) << " X " << xFocus << " " << next->getX() << " " << fabs(xFocus - (double)next->getX()) << " \n";
-		std::cout << (current->getY() < yFocus) << " Y " << current->getY() << " " << yFocus << std::endl;
-		if((fabs(xFocus - (double)next->getX()) < 0.01) && -current->getY() < -yFocus)
-		{
-			std::cout << "Move North\n";
-			Camera->SetPosition(xPosition,yPosition + MOVESPEED,0);
-		        Camera->SetFocalPoint(xFocus, yFocus + MOVESPEED, 0);
-		}
-		else
-		{
-			angle += .01;
-		        Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
-			f = Camera->GetFocalPoint();
-			xFocus = f[0];
-			yFocus = f[1];
-			if((fabs(xFocus - (double)next->getX()) < 0.01) && -current->getY() < -yFocus)
-			        Camera->SetFocalPoint(next->getX(), next->getY(), 0);
-
-		}
-	}
+	
 	//Go East
-	else*/ if(current->getX() < next->getX())
+	else */
+	std::cout << (current->getX() < next->getX()) << " " << (yPosition == (double)-row) << " " << yPosition << " " << -row << std::endl;
+	if(current->getX() < next->getX() && fabs(yPosition - (double)-row) < .01)
 	{
+		std::cout << "E\n";
 		//std::cout << "Y " << yFocus << " " << next->getY() <<" "<<fabs(yFocus - (double) next->getY()) << std::endl;
 		//std::cout << "X " << current->getX() << " " << xFocus << std::endl;
 		if(fabs(-yFocus - (double) next->getY()) < 0.01 && current->getX() < xFocus)
@@ -129,7 +95,7 @@ class vtkTimerCallback : public vtkCommand
 		}
 		else
 		{
-			angle += .01;
+			angle += ANGLESPEED;
 		        Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
 			if(fabs(-yFocus - (double) next->getY()) < 0.01 && current->getX() < xFocus)
 			        Camera->SetFocalPoint(next->getX(), next->getY(), 0);
@@ -148,13 +114,54 @@ class vtkTimerCallback : public vtkCommand
 		}
 		else
 		{
-			angle -= .01;
+			angle -= ANGLESPEED;
 		        Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
 			if((fabs(xFocus - (double)next->getX()) < 0.01) && -current->getY() > yFocus)
 			        Camera->SetFocalPoint(next->getX(), next->getY(), 0);
 		}
+	}/*
+	//Go West
+	if(current->getX() > next->getX())
+	{
+		std::cout << "W\n";
+		if(fabs(-yFocus - (double) next->getY()) < 0.01 && current->getX() > xFocus)
+		{
+			Camera->SetPosition(xPosition- MOVESPEED,yPosition,0);
+		        Camera->SetFocalPoint(xFocus - MOVESPEED, yFocus, 0);
+		}
+		else
+		{
+			angle -= ANGLESPEED;
+		        Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
+		if(fabs(-yFocus - (double) next->getY()) < 0.01 && current->getX() > xFocus)
+			        Camera->SetFocalPoint(next->getX(), next->getY(), 0);
+		}
 	}
+*/
+	//Go North
+	else if(current->getY() > next->getY() || yPosition < -row)
+	{
+		//std::cout <<"\nN\n"<< (fabs(xFocus - (double)next->getX())) << " X " << xFocus << " " << next->getX() << " " << fabs(xFocus - (double)next->getX()) << " \n";
+		//std::cout << (current->getY() < yFocus) << " Y " << current->getY() << " " << yFocus << std::endl;
+	std::cout << "N\n";
+	if((fabs(xFocus - (double)next->getX()) < 0.01) && -current->getY() < -yFocus || (fabs(xFocus - xPosition) < 0.01) && (yPosition < -row))
+		{
+			std::cout << "Move North\n";
+			Camera->SetPosition(xPosition,yPosition + MOVESPEED,0);
+		        Camera->SetFocalPoint(xFocus, yFocus + MOVESPEED, 0);
+		}
+		else
+		{
+			angle += ANGLESPEED;;
+		        Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
+			f = Camera->GetFocalPoint();
+			xFocus = f[0];
+			yFocus = f[1];
+			if((fabs(xFocus - (double)next->getX()) < 0.01) && -current->getY() < -yFocus)
+			        Camera->SetFocalPoint(next->getX(), next->getY(), 0);
 
+		}
+	}
         //std::cout << Camera->GetFocalPoint()[0] << "," << Camera->GetFocalPoint()[1] << std::endl;
       
     }
