@@ -462,12 +462,12 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
             }
 
             // Create the floor
-            vtkSmartPointer<vtkActor> b = CreatePlaneActor(mapper, floorTexture, current->getX(), current->getY(), -OFFSET, 90,0,0,1,1,1);
+            vtkSmartPointer<vtkActor> b = CreatePlaneActor(mapper, floorTexture, current->getX(), -1 * current->getY(), -OFFSET, 0,90,0,1,1,1);
             renderer->AddActor(b);
             actorCollection->AddItem(b);
 
             // Create the ceiling
-            vtkSmartPointer<vtkActor> c = CreatePlaneActor(mapper, ceilingTexture, current->getX(), current->getY(), OFFSET, -90,0,0,1,1,1);
+            vtkSmartPointer<vtkActor> c = CreatePlaneActor(mapper, ceilingTexture, current->getX(), -1 * current->getY(), OFFSET, 0,-90,0,1,1,1);
             renderer->AddActor(c);
             actorCollection->AddItem(c);
         }
