@@ -9,7 +9,7 @@
 
 #define MOVESPEED .02
 #define ANGLESPEED .01
-#define TOLERANCE .03
+#define TOLERANCE .02
 
 class vtkTimerCallback : public vtkCommand
 {
@@ -100,7 +100,7 @@ class vtkTimerCallback : public vtkCommand
 		}
 	}
 	//Go South
-	else if((current->getY() < next->getY()))
+	else if((current->getY() < next->getY()) && fabs(xPosition - current->getX()) < TOLERANCE)
 	{	
 		//std::cout <<"\nS\n"<<(fabs(xFocus - (double)next->getX()) < 0.01) << " x " << xFocus << " " << next->getX() << " " << fabs((double)xFocus - (double)next->getX()) << " \n";
 		//std::cout << (-current->getY() < yFocus) << " y " << -current->getY() << " " << yFocus << std::endl;
@@ -146,14 +146,13 @@ class vtkTimerCallback : public vtkCommand
 	}
 */
 	//Go West
-	else if( (current->getX() > next->getX()) || fabs(xPosition - current->getX()) > TOLERANCE  )
+	else if( (current->getX() > next->getX()) || ((fabs(xPosition - current->getX()) > TOLERANCE) && xPosition > col )  )
 	{
-	if( ( fabs(xFocus - next->getX()) < TOLERANCE && fabs(-yFocus - next->getY()) < TOLERANCE ) || (fabs(xPosition - current->getX()) < TOLERANCE ) )
+	if( (((fabs(next->getX() - xPosition) < TOLERANCE) || (col < xPosition)) && (fabs(fabs(yPosition) - fabs(yFocus)) < TOLERANCE)) && (xFocus < xPosition) )
 		{
 			std::cout << "Move West\n";
 			Camera->SetPosition(xPosition - MOVESPEED,yPosition,0);
 		        Camera->SetFocalPoint(xFocus - MOVESPEED, yFocus, 0);
-			std::cin >>col;
 		}
 		else
 		{
@@ -168,10 +167,8 @@ class vtkTimerCallback : public vtkCommand
 		}
 	}
 //Go North
-	else if((current->getY() > next->getY()) || 
-	(	(-yPosition > (double)row) && 
-		  ( fabs(xPosition - col) < TOLERANCE) && 
-		  ( fabs(xPosition - (double) col) > 0.00001) 
+	else if((current->getY() > next->getY()) ||
+((current->getY() > next->getY()) && (-yPosition > (double)row) && ( fabs(xPosition - col) < TOLERANCE) && ( xPosition != (double) col)
 	) )
 	{
 	std::cout << (current->getY() > next->getY()) << " " << (-yPosition > (double)row) << " " << ( fabs(xPosition - col) < TOLERANCE) << " " << ( xPosition != (double) col) <<" N\n";
