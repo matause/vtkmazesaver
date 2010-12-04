@@ -140,7 +140,7 @@ class vtkTimerCallback : public vtkCommand
 		}
 	}
 	//Go West
-	else if( ( current->youCanGoEast() || (next->youCanGoEast() && current->youCanGoWest()) ) && (current->getX() > next->getX()) || ((fabs(xPosition - current->getX()) > TOLERANCE) && xPosition > col )  )
+	else if( ((fabs(-yPosition - (double)row)) < TOLERANCE ) && ( current->youCanGoEast() || (next->youCanGoEast() && current->youCanGoWest()) ) && (current->getX() > next->getX()) || ((fabs(xPosition - current->getX()) > TOLERANCE) && xPosition > col ))
 	{
 	if( (((fabs(next->getX() - xPosition) < TOLERANCE) || (col < xPosition)) && (fabs(fabs(yPosition) - fabs(yFocus)) < TOLERANCE)) && (xFocus < xPosition) && (xFocus < xPosition) )
 		{
@@ -159,7 +159,8 @@ class vtkTimerCallback : public vtkCommand
 		}
 	}
 //Go North
-	else if( (current->youCanGoSouth() || (next->youCanGoSouth() && current->youCanGoNorth()) ) && ((current->getY() > next->getY()) || (-yPosition > (double)row) ) && ( fabs(xPosition - col) < TOLERANCE) )
+//
+	else if((current->youCanGoSouth() || (next->youCanGoSouth() && current->youCanGoNorth()) ) &&  ((current->getY() > next->getY()) || (yPosition < (double)(row * -1)) ) || ( fabs(xPosition - col) < TOLERANCE) )
 	{
 	//std::cout << (current->getY() > next->getY()) << " " << (-yPosition > (double)row) << " " << ( fabs(xPosition - col) < TOLERANCE) << " " << ( xPosition != (double) col) <<" N\n";
 	if((fabs(xFocus - (double)next->getX()) < TOLERANCE) && -current->getY() < -yFocus || (fabs(xFocus - xPosition) < TOLERANCE) && (yPosition < -row) && (yFocus > yPosition))
