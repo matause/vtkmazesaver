@@ -38,16 +38,20 @@ Command Line Arguments:
 #include <vtkRendererCollection.h>
 #include <vtkCornerAnnotation.h>
 #include <vtkPlaneSource.h>
+#include <vtkPentagonalPrism.h>
+#include <vtkTetra.h>
 #include <vtkCamera.h>
 #include <vtkCameraActor.h>
 #include <vtkMath.h>
 #include <vtkImageData.h>
-//#include <vtkJPEGReader.h>
 #include <vtkPNGReader.h>
 #include <vtkTextureMapToPlane.h>
 #include <vtkAxesActor.h>
 #include <vtkOrientationMarkerWidget.h>
 #include <vtkActorCollection.h>
+#include <vtkCellArray.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkDataSetMapper.h>
 
 
 #include <iostream>
@@ -80,6 +84,7 @@ void initMaze(std::vector<std::vector<Node*> > & maze)
 			maze[y].push_back(new Node(x,y));
 	}
 }
+
 bool finishedVisiting(std::vector<std::vector<Node*> > & maze, Node * & Current)
 {
 	int x = Current->getX();
@@ -117,6 +122,91 @@ bool finishedVisiting(std::vector<std::vector<Node*> > & maze, Node * & Current)
 	  	}
 	return true;
 }
+
+void CreatePentagonalPrismActor(vtkActor* actor, int x, int y)
+{
+  // Create the points
+  vtkSmartPointer<vtkPoints> points =
+    vtkSmartPointer<vtkPoints>::New();
+  points->InsertNextPoint(11, 10, 10);
+  points->InsertNextPoint(13, 10, 10);
+  points->InsertNextPoint(14, 12, 10);
+  points->InsertNextPoint(12, 14, 10);
+  points->InsertNextPoint(10, 12, 10);
+  points->InsertNextPoint(11, 10, 14);
+  points->InsertNextPoint(13, 10, 14);
+  points->InsertNextPoint(14, 12, 14);
+  points->InsertNextPoint(12, 14, 14);
+  points->InsertNextPoint(10, 12, 14);
+
+  // Pentagonal Prism
+  vtkSmartPointer<vtkPentagonalPrism> pentagonalPrism =
+    vtkSmartPointer<vtkPentagonalPrism>::New();
+  pentagonalPrism->GetPointIds()->SetId(0,0);
+  pentagonalPrism->GetPointIds()->SetId(1,1);
+  pentagonalPrism->GetPointIds()->SetId(2,2);
+  pentagonalPrism->GetPointIds()->SetId(3,3);
+  pentagonalPrism->GetPointIds()->SetId(4,4);
+  pentagonalPrism->GetPointIds()->SetId(5,5);
+  pentagonalPrism->GetPointIds()->SetId(6,6);
+  pentagonalPrism->GetPointIds()->SetId(7,7);
+  pentagonalPrism->GetPointIds()->SetId(8,8);
+  pentagonalPrism->GetPointIds()->SetId(9,9);
+
+  vtkSmartPointer<vtkCellArray> cellArray =
+    vtkSmartPointer<vtkCellArray>::New();
+  cellArray->InsertNextCell(pentagonalPrism);
+
+  // Add the points and pentagonal prism to an unstructured grid
+  vtkSmartPointer<vtkUnstructuredGrid> uGrid =
+    vtkSmartPointer<vtkUnstructuredGrid>::New();
+  uGrid->SetPoints(points);
+  uGrid->InsertNextCell(pentagonalPrism->GetCellType(), pentagonalPrism->GetPointIds());
+
+  // Visualize
+  vtkSmartPointer<vtkDataSetMapper> mapper =
+    vtkSmartPointer<vtkDataSetMapper>::New();
+  mapper->SetInputConnection(uGrid->GetProducerPort());
+
+  actor->SetMapper(mapper);
+}
+
+void CreateTetraActor(vtkActor* actor, int x, int y)
+{
+  vtkSmartPointer< vtkPoints > points =
+    vtkSmartPointer< vtkPoints > :: New();
+  points->InsertNextPoint(-0.5, -0.2915, -0.2165);
+  points->InsertNextPoint(0.5, -0.2915, -0.2165);
+  points->InsertNextPoint(0, 0.5745, -0.2165);
+  points->InsertNextPoint(0, 0, 0.6195);
+
+  vtkSmartPointer<vtkUnstructuredGrid> unstructuredGrid =
+    vtkSmartPointer<vtkUnstructuredGrid>::New();
+  unstructuredGrid->SetPoints(points);
+
+  vtkSmartPointer<vtkTetra> tetra =
+    vtkSmartPointer<vtkTetra>::New();
+  tetra->GetPointIds()->SetId(0, 0);
+  tetra->GetPointIds()->SetId(1, 1);
+  tetra->GetPointIds()->SetId(2, 2);
+  tetra->GetPointIds()->SetId(3, 3);
+
+  vtkSmartPointer<vtkCellArray> cellArray =
+    vtkSmartPointer<vtkCellArray>::New();
+  cellArray->InsertNextCell(tetra);
+  unstructuredGrid->SetCells(VTK_TETRA, cellArray);
+
+  // Create a mapper and actor
+  vtkSmartPointer<vtkDataSetMapper> mapper =
+    vtkSmartPointer<vtkDataSetMapper>::New();
+  mapper->SetInputConnection(unstructuredGrid->GetProducerPort());
+
+  actor->SetMapper(mapper);
+  actor->SetScale(0.5, 0.5, 0.5);
+  actor->SetPosition(x, y, 0);
+}
+
+
 void generateMaze(std::vector<std::vector<Node*> > & maze, Node * & Current)
 {
 	if(finishedVisiting(maze,Current)) return;
@@ -211,6 +301,24 @@ std::vector <Node*> generateMaze2(std::vector<std::vector<Node*> > & maze)
 	int total = ROWS * COLUMNS;
 	std::stack <Node*> CellStack;
 	//CellStack.push(current);
+
+	// come up with up to 10 random nodes in which we will place a polyhedron
+	// A polyhedron cannot be in either [0][0] or [ROWS-1][COLUMNS-1]
+	int polyhedronRow[10];
+	int polyhedronCol[10];
+	int modifier = 1;
+	for (int i = 0; i < 10; i++, modifier *= 2)
+	{
+	    polyhedronRow[i] = (int)vtkMath::Random(1.0, (ROWS - 1) * modifier);
+	    polyhedronCol[i] = (int)vtkMath::Random(1.0, (COLUMNS - 1) * modifier);
+	    std::cout << polyhedronCol[i] << ", " << polyhedronRow[i] << std::endl;
+	}
+	// RIGGED!
+	polyhedronRow[0] = 1;
+    polyhedronCol[0] = 0;
+    polyhedronRow[1] = 0;
+    polyhedronCol[1] = 1;
+
 	while(visited < total)
 	{
 		solution.push_back(current);
@@ -218,7 +326,38 @@ std::vector <Node*> generateMaze2(std::vector<std::vector<Node*> > & maze)
 		int x = current->getX();
 		int y = current->getY();
 		std::vector <Node*> adjacentcells;
-		int i = (int) vtkMath::Random(0.0,100.0);
+		int i = (int) vtkMath::Random(0.0, 100.0);
+
+        // If the current cell satisfies x + y = a number in polyhedron, then add a random polyhedron
+        for (int i = 0; i < 10; i++)
+        {
+            if (x == polyhedronCol[i] && y == polyhedronRow[i])
+            {
+                std::cout << "Node (" << x << ", " << y << ")" << std::endl;
+                polyhedronCol[i] = COLUMNS;
+                polyhedronRow[i] = ROWS;
+
+                // determine which kind of polyhedron to add.
+                //int type = (int) vtkMath::Random(0, 1); //0 = tetrahedron, 1 = pentagonal prism
+                int type = 0;
+                if (type == 0)
+                {
+                    // make the polyhedron at this location and point the current node to it
+                    vtkSmartPointer<vtkActor> tetraActor = vtkSmartPointer<vtkActor>::New();
+                    CreateTetraActor(tetraActor, x, -y);
+                    current->setPolyhedron(tetraActor);
+
+                }
+                else
+                {
+                    // make the pentagonal prism at this (x, y) and point the current node to it
+                    vtkSmartPointer<vtkActor> pentagonalPrismActor = vtkSmartPointer<vtkActor>::New();
+                    CreatePentagonalPrismActor(pentagonalPrismActor, x, -y);
+                    current->setPolyhedron(pentagonalPrismActor);
+                }
+            }
+        }
+
 		//North
 		if(y > 0)
 		{
@@ -281,7 +420,6 @@ std::vector <Node*> generateMaze2(std::vector<std::vector<Node*> > & maze)
 			CellStack.push(current);
 			current = adjacentcells[i];
 		}
-
 	}
 	return solution;
 }
@@ -345,21 +483,21 @@ void astar(std::vector<std::vector<Node*> > & maze, Node * Start, Node * End)
 	Node * current = End;
 	while(current && current != Start)
 		{
-		std::cout<< current->getX() << " " << current->getY() << std::endl;
+		//std::cout<< current->getX() << " " << current->getY() << std::endl;
 		current->getParent()->setChild(current);
 		current = current->getParent();
 		}
-	std::cout << "Shortest Path (Start->Finish)\n";
+	//std::cout << "Shortest Path (Start->Finish)\n";
 	int steps = 0;
 	current = Start;
-	std::cout<< current->getX() << " " << current->getY() << std::endl;
+	//std::cout<< current->getX() << " " << current->getY() << std::endl;
 	while(current && current != End)
 	{
 		current = current->getChild();
-		std::cout<< current->getX() << " " << current->getY() << std::endl;
+		//std::cout<< current->getX() << " " << current->getY() << std::endl;
 		steps++;
 	}
-	std::cout << "It takes " << steps << " steps to complete the maze\n";
+	//std::cout << "It takes " << steps << " steps to complete the maze\n";
 }
 
 	std::vector <Node *> DepthFirst(std::vector<std::vector<Node*> > & maze, Node * start, int endx, int endy)
@@ -422,11 +560,6 @@ vtkSmartPointer<vtkActor> CreatePlaneActor(vtkSmartPointer<vtkPolyDataMapper> ma
 
 void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRenderer> &renderer,   vtkActorCollection * &actorCollection)
 {
-/*
-  vtkSmartPointer<vtkJPEGReader> jPEGReader =
-    vtkSmartPointer<vtkJPEGReader>::New();
-  jPEGReader->SetFileName ( TEXTURE1 );
-*/
     // Load the textures for the walls, floor, and ceiling
     vtkSmartPointer<vtkPNGReader> wallTextureSource = vtkSmartPointer<vtkPNGReader>::New();
     wallTextureSource->SetFileName(WALLTEXTURE);
@@ -461,12 +594,6 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
     vtkSmartPointer<vtkPolyDataMapper> mapper =
         vtkSmartPointer<vtkPolyDataMapper>::New();
     mapper->SetInputConnection(texturePlane->GetOutputPort());
-
-
- /*
-  vtkSmartPointer<vtkActor> actor =
-    vtkSmartPointer<vtkActor>::New();
-  actor->SetMapper(mapper);*/
 
     // Create the walls, floor, and ceiling of the maze
 	for(int y=0; y < ROWS; y++)
@@ -516,6 +643,13 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
             vtkSmartPointer<vtkActor> c = CreatePlaneActor(mapper, ceilingTexture, current->getX(), -1 * current->getY(), OFFSET, 0,-90,0,1,1,1);
             renderer->AddActor(c);
             actorCollection->AddItem(c);
+
+            // Add the polygon, if there is one
+            if (current->checkPolyhedron())
+            {
+                renderer->AddActor(current->getPolyhedron());
+            }
+            // Save the polygon's pointer in the array of polygons so they can be animated
         }
     }
     actorCollection->InitTraversal();

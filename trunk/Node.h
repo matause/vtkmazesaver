@@ -12,13 +12,15 @@ private:
 	int _x,_y;
 	int _g;//path cost
 	int _h;//heuristic
+	bool _hasPolyhedron;
 	bool _visited;
 	unsigned int _openEdges;
 	Node * _parent;
 	Node * _child;
+    vtkSmartPointer<vtkActor> polyhedron;   // Pointer to the polyhedron, if there is one.
 public:
-	Node() {_x = 0; _y = 0; _openEdges = 0; _visited = false;}
-	Node(int x, int y) {_x = x; _y = y; _openEdges = 0; _visited = false; _g = 100; _h= 100;}
+	Node() {_x = 0; _y = 0; _openEdges = 0; _visited = false; _hasPolyhedron = false;}
+	Node(int x, int y) {_x = x; _y = y; _openEdges = 0; _visited = false; _g = 100; _h= 100; _hasPolyhedron = false;}
 	int getX() {return _x;}
 	int getY() {return _y;}
 	bool setG(int g) {if(g < _g) _g=g; else return false; return true;}
@@ -39,6 +41,9 @@ public:
 	void removeSouthWall() {if (!youCanGoSouth()) _openEdges +=S;}
 	void removeEastWall() {if (!youCanGoEast()) _openEdges +=E;}
 	void removeWestWall() {if (!youCanGoWest()) _openEdges +=W;}
+	void setPolyhedron(vtkSmartPointer<vtkActor> poly) {polyhedron = poly; _hasPolyhedron = true;}
+	vtkSmartPointer<vtkActor> getPolyhedron() {return polyhedron;}
+	bool checkPolyhedron() {return _hasPolyhedron;}
 	bool youCanGoNorth()
 	{
 	    if (_openEdges == 1 || _openEdges == 3 || _openEdges == 5 ||
