@@ -65,6 +65,9 @@ Command Line Arguments:
 #include "KeyboardInteractor.h"
 #include "vtkTimerCallback.h"
 
+#define WindowX 800
+#define WindowY 600
+
 #define ROWS 10
 #define COLUMNS 10
 
@@ -73,6 +76,7 @@ Command Line Arguments:
 #define WALLTEXTURE "Brick.png"
 #define FLOORTEXTURE "Dirt.png"
 #define CEILINGTEXTURE "Cement.png"
+#define BOOKTEXTURE "BlueRedBookCover.png"
 
 void initMaze(std::vector<std::vector<Node*> > & maze)
 {
@@ -497,7 +501,7 @@ void astar(std::vector<std::vector<Node*> > & maze, Node * Start, Node * End)
 		//std::cout<< current->getX() << " " << current->getY() << std::endl;
 		steps++;
 	}
-	//std::cout << "It takes " << steps << " steps to complete the maze\n";
+	std::cout << "It takes " << steps << " steps to complete the maze\n";
 }
 
 	std::vector <Node *> DepthFirst(std::vector<std::vector<Node*> > & maze, Node * start, int endx, int endy)
@@ -570,6 +574,9 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
     vtkSmartPointer<vtkPNGReader> ceilingTextureSource = vtkSmartPointer<vtkPNGReader>::New();
     ceilingTextureSource->SetFileName(CEILINGTEXTURE);
 
+    vtkSmartPointer<vtkPNGReader> bookTextureSource = vtkSmartPointer<vtkPNGReader>::New();
+    bookTextureSource->SetFileName(BOOKTEXTURE);
+
     //Create a plane
     vtkSmartPointer<vtkPlaneSource> planeSource =
         vtkSmartPointer<vtkPlaneSource>::New();
@@ -586,6 +593,8 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
     vtkSmartPointer<vtkTexture> ceilingTexture = vtkSmartPointer<vtkTexture>::New();
     ceilingTexture->SetInput(ceilingTextureSource->GetOutput());
 
+    vtkSmartPointer<vtkTexture> bookTexture = vtkSmartPointer<vtkTexture>::New();
+    bookTexture->SetInput(bookTextureSource->GetOutput());
     // Other things
     vtkSmartPointer<vtkTextureMapToPlane> texturePlane =
         vtkSmartPointer<vtkTextureMapToPlane>::New();
@@ -595,6 +604,7 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
         vtkSmartPointer<vtkPolyDataMapper>::New();
     mapper->SetInputConnection(texturePlane->GetOutputPort());
 
+    int bookprobability = 10;
     // Create the walls, floor, and ceiling of the maze
 	for(int y=0; y < ROWS; y++)
     {
@@ -605,7 +615,16 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
             // If there is not an opening to the north, make a wall there.
             if(!current->youCanGoNorth())
             {
-                vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, wallTexture, current->getX(), - 1 * current->getY() + OFFSET,0,0,0,90, 1,1,1);
+		vtkSmartPointer<vtkActor> a;
+		if(vtkMath::Random(0.0,bookprobability) < 2)
+		{
+			bookprobability = bookprobability * 2;
+			a = CreatePlaneActor(mapper, bookTexture, current->getX(), - 1 * current->getY() + OFFSET,0,0,0,90, 1,1,1);
+	        }
+		else
+		{
+			a = CreatePlaneActor(mapper, wallTexture, current->getX(), - 1 * current->getY() + OFFSET,0,0,0,90, 1,1,1);
+		}
                 renderer->AddActor(a);
                 actorCollection->AddItem(a);
             }
@@ -613,7 +632,14 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
             // If there is not an opening to the west, make a wall there.
             if(!current->youCanGoWest())
             {
-                vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, wallTexture, current->getX() - OFFSET - 2, - 1 * current->getY(), 0, 0,0,0,1,1,1);
+		vtkSmartPointer<vtkActor> a;
+		if(vtkMath::Random(0.0,bookprobability) < 2)
+		{
+			bookprobability = bookprobability * 2;
+	                a = CreatePlaneActor(mapper, bookTexture, current->getX() - OFFSET - 2, - 1 * current->getY(), 0, 0,0,0,1,1,1);
+		}
+		else
+	                a = CreatePlaneActor(mapper, wallTexture, current->getX() - OFFSET - 2, - 1 * current->getY(), 0, 0,0,0,1,1,1);
                 renderer->AddActor(a);
                 actorCollection->AddItem(a);
             }
@@ -621,7 +647,16 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
             // If there is not an opening to the south, make a wall there (last row only).
             if(y == ROWS - 1 && !current->youCanGoSouth())
             {
-                vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, wallTexture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,1,1,1);
+		vtkSmartPointer<vtkActor> a;
+		if(vtkMath::Random(0.0,bookprobability) < 2)
+		{
+			bookprobability = bookprobability * 2;
+	                a = CreatePlaneActor(mapper, bookTexture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,1,1,1);
+		}
+		else
+		{
+	                a = CreatePlaneActor(mapper, wallTexture, current->getX(), - 1 * (current->getY() + 1) + OFFSET, 0, 0,0,90,1,1,1);
+		}
                 renderer->AddActor(a);
                 actorCollection->AddItem(a);
             }
@@ -629,7 +664,14 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
             // If there is not an opening to the east, make a wall there (last column onln->setH(endx,endy);y).
             if(x == COLUMNS -1 && !current->youCanGoEast())
             {
-                vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, wallTexture, current->getX() + OFFSET, -1 * current->getY(), 0, 0,0,0,1,1,1);
+		vtkSmartPointer<vtkActor> a;
+		if(vtkMath::Random(0.0,bookprobability) < 2)
+		{
+			bookprobability = bookprobability * 2;
+	                a = CreatePlaneActor(mapper, wallTexture, current->getX() + OFFSET, -1 * current->getY(), 0, 0,0,0,1,1,1);
+		}
+		else
+	                a = CreatePlaneActor(mapper, wallTexture, current->getX() + OFFSET, -1 * current->getY(), 0, 0,0,0,1,1,1);
                 renderer->AddActor(a);
                 actorCollection->AddItem(a);
             }
@@ -660,6 +702,7 @@ int main(int argc,char *argv[])
 	  //Create a renderer, render window and interactor
     vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+	renderWindow->SetSize(WindowX,WindowY);
     renderWindow->AddRenderer(renderer);
     vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     renderWindowInteractor->SetRenderWindow(renderWindow);
@@ -768,7 +811,7 @@ std::cout << "DFP: " << path.size() << std::endl;
   // Sign up to receive TimerEvent
   vtkSmartPointer<vtkTimerCallback> cb =
     vtkSmartPointer<vtkTimerCallback>::New();
-  //renderWindowInteractor->AddObserver(vtkCommand::TimerEvent, cb); //PUT THIS LINE BACK IN FOR AUTOMATED MOTION
+  renderWindowInteractor->AddObserver(vtkCommand::TimerEvent, cb); //PUT THIS LINE BACK IN FOR AUTOMATED MOTION
   cb->setMaze(maze, path);
   cb->setCamera(camera, renderWindowInteractor);
   int timerId = renderWindowInteractor->CreateRepeatingTimer(1);

@@ -31,12 +31,18 @@ class vtkTimerCallback : public vtkCommand
         }
         //std::cout << this->TimerCount << endl;
 	moveCamera();
+	rotateActors();
         Interactor->GetRenderWindow()->Render();
     }
     void setMaze(std::vector<std::vector<Node*> > & m, std::vector<Node*> p)
     {
       maze = m;
       path = p;
+      for(int y = 0; y < maze.size(); y++)
+        for(int x = 0; x < maze[y].size(); x++)
+          if(maze[y][x]->checkPolyhedron())
+            rotators.push_back(maze[y][x]->getPolyhedron());
+      
     }
     void clearVisit()
     {
@@ -190,12 +196,19 @@ class vtkTimerCallback : public vtkCommand
         //std::cout << Camera->GetFocalPoint(.erase(openlist.begin())[0] << "," << Camera->GetFocalPoint()[1] << std::endl;
       
     }
+    void rotateActors()
+    {
+      for(int i = 0; i < rotators.size(); i++)
+        rotators[i]->RotateZ(1);
+    }
   private:
     int TimerCount;
     std::vector<std::vector<Node*> > maze;
     std::vector<Node*> path;
+    std::vector <vtkSmartPointer<vtkActor> > rotators;
     vtkSmartPointer<vtkCamera> Camera;
     vtkSmartPointer<vtkRenderWindowInteractor> Interactor;
+
 };
 
 #endif
