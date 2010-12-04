@@ -72,11 +72,11 @@ Command Line Arguments:
 
 void initMaze(std::vector<std::vector<Node*> > & maze)
 {
-	for(int y=0; y < COLUMNS; y++)
+	for(int y=0; y < ROWS; y++)
 	{
 		std::vector<Node*> row;
 		maze.push_back(row);
-		for(int x=0; x < ROWS; x++)
+		for(int x=0; x < COLUMNS; x++)
 			maze[y].push_back(new Node(x,y));
 	}
 }
@@ -135,7 +135,7 @@ void generateMaze(std::vector<std::vector<Node*> > & maze, Node * & Current)
 		//South
 		if(i >= 0 && i <25)
 		{
-			if(y < COLUMNS - 1)
+			if(y < ROWS - 1)
 			{
 				if(!maze[y+1][x]->visited()  && !Current->youCanGoSouth())
 				{
@@ -290,8 +290,8 @@ std::vector <Node*> generateMaze2(std::vector<std::vector<Node*> > & maze)
 void add_directions(std::vector<std::vector<Node*> > & maze, std::vector <Node*> &openlist, int x, int y, Node * Parent, Node * End)
 {
 	Node * current; //the new direction
-	if((x >= 0 && x < ROWS) &&
-		(y >= 0 && y < COLUMNS))
+	if((x >= 0 && x < COLUMNS) &&
+		(y >= 0 && y < ROWS))
 		current = maze[y][x];
 	else return;
 	//ignore if the node is already on the closed list or is unreachable
@@ -308,12 +308,16 @@ void add_directions(std::vector<std::vector<Node*> > & maze, std::vector <Node*>
 		}
 	}
 }
+void clearVisit(std::vector<std::vector<Node*> > & maze)
+{
+	for(int y = 0; y < ROWS; y++)
+		for(int x = 0; x < COLUMNS; x++)
+			maze[y][x]->unvisit();
+}
 //Give this function the maze, a start and an end node and it will calculate the shortest path to the end node.
 void astar(std::vector<std::vector<Node*> > & maze, Node * Start, Node * End)
 {
-	for(int y = 0; y < COLUMNS; y++)
-		for(int x = 0; x < ROWS; x++)
-			maze[y][x]->unvisit();
+	clearVisit(maze);
 	Start->setG(0);
 	std::vector <Node*> openlist;
 	add_directions(maze, openlist,Start->getX(),Start->getY(),Start, End);
@@ -357,6 +361,47 @@ void astar(std::vector<std::vector<Node*> > & maze, Node * Start, Node * End)
 	}
 	std::cout << "It takes " << steps << " steps to complete the maze\n";
 }
+
+	std::vector <Node *> DepthFirst(std::vector<std::vector<Node*> > & maze, Node * start, int endx, int endy)
+	{	
+		std::vector <Node *> path;
+		clearVisit(maze);
+		Node * current = start;
+		while(current != maze[endy][endx])
+		{
+		path.push_back(current);
+		Node * next = NULL;
+		current->visit();
+		int x = current->getX();
+		int y = current->getY();
+		int distance = abs(endy - y) + abs(endx - x);
+		if (distance == 0)
+			break;
+		int bestdistance = distance + 2;
+		if(current->youCanGoSouth())// && checkBest(maze[y+1][x],endx,endy,bestdistance) )
+			next = maze[y+1][x];
+		if(current->youCanGoEast())// && checkBest(maze[y][x+1],endx,endy,bestdistance))
+			if(next == NULL || (next->visited() == true))
+				next = maze[y][x+1];
+		if(current->youCanGoWest())// && checkBest(maze[y][x-1],endx,endy,bestdistance))
+			if(next == NULL || (next->visited() == true))
+				next = maze[y][x-1];
+		if(current->youCanGoNorth())// && checkBest(maze[y-1][x],endx,endy,bestdistance))
+			if(next == NULL || (next->visited() == true))
+				next = maze[y-1][x];
+		if(next->visited() == true || next == NULL && current->getParent() != NULL)
+			current = current->getParent();
+		else
+		{	
+			current->setChild(next);
+			next->setParent(current);
+			current = next;
+		}
+		}
+		path.push_back(maze[endy][endx]);
+		return path;
+	}
+
 
 vtkSmartPointer<vtkActor> CreatePlaneActor(vtkSmartPointer<vtkPolyDataMapper> mapper,vtkSmartPointer<vtkTexture> texture, double x, double y, double z, double rotx, double roty, double rotz, double R, double G, double B) {
 	vtkSmartPointer<vtkActor> actor =
@@ -424,9 +469,9 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
   actor->SetMapper(mapper);*/
 
     // Create the walls, floor, and ceiling of the maze
-	for(int y=0; y < COLUMNS; y++)
+	for(int y=0; y < ROWS; y++)
     {
-		for(int x=0; x < ROWS; x++)
+		for(int x=0; x < COLUMNS; x++)
         {
             Node * current = maze[y][x];
 
@@ -454,7 +499,7 @@ void printMaze(std::vector<std::vector<Node*> > & maze, vtkSmartPointer<vtkRende
                 actorCollection->AddItem(a);
             }
 
-            // If there is not an opening to the east, make a wall there (last column only).
+            // If there is not an opening to the east, make a wall there (last column onln->setH(endx,endy);y).
             if(x == COLUMNS -1 && !current->youCanGoEast())
             {
                 vtkSmartPointer<vtkActor> a = CreatePlaneActor(mapper, wallTexture, current->getX() + OFFSET, -1 * current->getY(), 0, 0,0,0,1,1,1);
@@ -485,12 +530,14 @@ int main(int argc,char *argv[])
     vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     renderWindowInteractor->SetRenderWindow(renderWindow);
   vtkActorCollection * actorCollection = vtkActorCollection::New();
-
+	std::cout <<"1";
 	std::vector<std::vector<Node*> > maze;
 	initMaze(maze);
+	std::cout <<"2";
 	vtkMath::RandomSeed(time(NULL));
 	//generateMaze(maze, maze[0][0]);
 	generateMaze2(maze);
+	std::cout <<"3";
 /*
 std::cout << "NORTH\n";
 for(int j = 0; j < COLUMNS; j++)
@@ -533,18 +580,19 @@ for(int j = 0; j < COLUMNS; j++)
 		std::cout << endl;
 	}
 */
-astar(maze, maze[0][0], maze[COLUMNS-1][ROWS-1]);
+std::vector <Node*> path = DepthFirst(maze, maze[0][0], COLUMNS-1, ROWS-4);
+astar(maze, maze[0][0], maze[ROWS-1][COLUMNS-4]);
 std::cout << "Shortest Path\n";
-for(int j = 0; j < COLUMNS; j++)
+for(int j = 0; j < ROWS; j++)
 	{
-	for(int i = 0; i < ROWS; i++)
+	for(int i = 0; i < COLUMNS; i++)
 		{
 			std::cout << maze[j][i]->getF() << "\t";
 		}
 		std::cout << endl;
 	}
 	printMaze(maze, renderer,actorCollection);
-
+std::cout << "DFP: " << path.size() << std::endl;
   // Camera
   vtkSmartPointer<vtkCamera> camera =
     vtkSmartPointer<vtkCamera>::New();
@@ -587,9 +635,9 @@ for(int j = 0; j < COLUMNS; j++)
   vtkSmartPointer<vtkTimerCallback> cb =
     vtkSmartPointer<vtkTimerCallback>::New();
   //renderWindowInteractor->AddObserver(vtkCommand::TimerEvent, cb); //PUT THIS LINE BACK IN FOR AUTOMATED MOTION
-  cb->setMaze(maze);
+  cb->setMaze(maze, path);
   cb->setCamera(camera, renderWindowInteractor);
-  int timerId = renderWindowInteractor->CreateRepeatingTimer(10);
+  int timerId = renderWindowInteractor->CreateRepeatingTimer(1);
   std::cout << "timerId: " << timerId << std::endl;
 
   // Start the interaction and timer
