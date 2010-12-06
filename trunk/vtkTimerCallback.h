@@ -9,7 +9,14 @@
 
 #define MOVESPEED .02
 #define ANGLESPEED .01
-#define TOLERANCE .02
+#define TOLERANCE 1
+
+#define PI 3.14159265
+
+#define MOVEINCREMENT 0.2
+#define ANGLEINCREMENT PI/24
+
+#define COLLISIONBUFFER .4
 
 class vtkTimerCallback : public vtkCommand
 {
@@ -33,6 +40,100 @@ class vtkTimerCallback : public vtkCommand
 	rotateActors();
 
 
+
+
+
+
+
+
+        vtkRenderWindowInteractor *rwi = this->Interactor;
+
+        //Get actor position
+        double * p = Camera->GetPosition();
+        double xPosition = p[0];
+        double yPosition = p[1];
+        double * f = Camera->GetFocalPoint();
+        double xFocus = f[0];
+        double yFocus = f[1];
+
+        double xLook = xFocus - xPosition;
+        double yLook = yFocus - yPosition;
+        double angle;
+
+        // Be careful not to divide by zero! If x is close enough to zero, we will just call it zero
+        // and set the angle to Pi/2.
+        if (fabs(xLook) > 0.0001)
+        {
+            angle = atan(yLook / xLook);
+        }
+        else
+        {
+            angle = PI / 2;
+        }
+
+        if (xLook < 0)
+        {
+            angle = PI + angle;
+        }
+
+        // Handles the arrow keys and moves the Player accordingly
+        if(*upDown)
+        {
+            double newX = xPosition + MOVEINCREMENT*(xLook);
+            double newY = yPosition + MOVEINCREMENT*(yLook);
+            int row = -yPosition;
+            int col = xPosition;
+            if(!tempMaze[row][col]->youCanGoWest() && newX < col - COLLISIONBUFFER)
+                newX = col - COLLISIONBUFFER;
+            else if(!tempMaze[row][col]->youCanGoEast() && newX > col + COLLISIONBUFFER)
+                newX = col + COLLISIONBUFFER;
+            if(!tempMaze[row][col]->youCanGoNorth() && newY > -row + COLLISIONBUFFER)
+                newY = -row + COLLISIONBUFFER;
+            else if(!tempMaze[row][col]->youCanGoSouth() && newY < -row - .4)
+                newY = -row - COLLISIONBUFFER;
+
+            Camera->SetPosition(newX, newY, 0);
+        }
+        if(*downDown)
+        {
+            double newX = xPosition - MOVEINCREMENT*(xLook);
+            double newY = yPosition - MOVEINCREMENT*(yLook);
+            int row = -yPosition;
+            int col = xPosition;
+            if(!tempMaze[row][col]->youCanGoWest() && newX < col - COLLISIONBUFFER)
+                newX = col - COLLISIONBUFFER;
+            else if(!tempMaze[row][col]->youCanGoEast() && newX > col + COLLISIONBUFFER)
+                newX = col + COLLISIONBUFFER;
+            if(!tempMaze[row][col]->youCanGoNorth() && newY > -row + COLLISIONBUFFER)
+                newY = -row + COLLISIONBUFFER;
+            else if(!tempMaze[row][col]->youCanGoSouth() && newY < -row - COLLISIONBUFFER)
+                newY = -row - COLLISIONBUFFER;
+
+            Camera->SetPosition(newX, newY, 0);
+        }
+        if(*rightDown)
+        {
+            angle -= ANGLEINCREMENT;
+        }
+        if(*leftDown)
+        {
+            angle += ANGLEINCREMENT;
+        }
+
+        if (angle > 2*PI)
+        {
+            angle -= 2*PI;
+        }
+        else if (angle < 0)
+        {
+            angle += 2*PI;
+        }
+
+        p = Camera->GetPosition();
+        xPosition = p[0];
+        yPosition = p[1];
+
+        Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
         if (*leftDown)
             std::cout << "left down" << std::endl;
         if (*rightDown)
@@ -62,10 +163,11 @@ class vtkTimerCallback : public vtkCommand
 		for(int x = 0; x < maze[y].size(); x++)
 			maze[y][x]->unvisit();
     }
-    void setCamera(vtkSmartPointer<vtkCamera> & c, vtkSmartPointer<vtkRenderWindowInteractor> & r, bool &up, bool &down, bool &left, bool &right)
+    void setCamera(vtkSmartPointer<vtkCamera> & c, vtkSmartPointer<vtkRenderWindowInteractor> & r, bool &up, bool &down, bool &left, bool &right, std::vector<std::vector<Node*> > &nodes)
     {
         Camera = c;
         Interactor = r;
+        tempMaze = nodes;
         upDown = &up;
         downDown = &down;
         leftDown = &left;
@@ -226,7 +328,7 @@ class vtkTimerCallback : public vtkCommand
 	std::cout << Camera->GetRoll() << " " <<(fabs(Camera->GetRoll()) - 90) << std::endl;
 	if( fabs((fabs(Camera->GetRoll()) - 90)) > TOLERANCE)
 	{
-std::cout <<		"Roll" << std::endl;
+        std::cout <<"Roll" << std::endl;
 		Camera->Roll(1);
 	}
       for(int i = 0; i < rotators.size(); i++)
@@ -250,7 +352,7 @@ std::cout <<		"Roll" << std::endl;
 	bool *downDown;
 	bool *leftDown;
 	bool *rightDown;
-
+    std::vector<std::vector<Node*> > tempMaze;
 };
 
 #endif
