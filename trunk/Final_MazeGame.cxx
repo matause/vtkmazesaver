@@ -777,7 +777,7 @@ std::cout << "DFP: " << path.size() << std::endl;
 //  camera->SetFocalPoint(ROWS/2, -1 * COLUMNS/2, 00);
     camera->SetPosition(0,0,0);
     camera->SetFocalPoint(1,0,0);
-    camera->Roll(90);
+    camera->Roll((double)90);
   renderer->SetActiveCamera(camera);
 
 //Keyboard Style

@@ -57,6 +57,8 @@ class vtkTimerCallback : public vtkCommand
     }
     void moveCamera()
     {
+	if( (fabs(Camera->GetRoll()) - 90) > TOLERANCE)
+		return;
         double * p = Camera->GetPosition();
         double xPosition = p[0];
         double yPosition = p[1];
@@ -198,8 +200,23 @@ class vtkTimerCallback : public vtkCommand
     }
     void rotateActors()
     {
+        double * p = Camera->GetPosition();
+        double xPosition = p[0];
+        double yPosition = p[1];
+	if( (fabs(Camera->GetRoll()) - 90) > TOLERANCE)
+	{
+		Camera->Roll(1);
+	}
       for(int i = 0; i < rotators.size(); i++)
+	{
+	if(fabs(xPosition - rotators[i]->GetPosition()[0]) < TOLERANCE && fabs(yPosition - rotators[i]->GetPosition()[1]) < TOLERANCE)
+		{
+			rotators[i]->SetPosition(-10,10,-10);
+			rotators.erase(rotators.begin() + i);
+			Camera->Roll(1);
+		}
         rotators[i]->RotateZ(1);
+	}
     }
   private:
     int TimerCount;
