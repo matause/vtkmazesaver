@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <iostream>
-
+#include <stdlib.h>
 #include "Node.h"
 
 #define PI 3.14159265
@@ -20,20 +20,29 @@ class KeyPressInteractorStyle : public vtkInteractorStyle/*vtkInteractorStyleTra
 	vtkSmartPointer<vtkCamera> Camera;
 	vtkActorCollection * actorCollection;
 	std::vector<std::vector<Node*> > tempMaze;
+	bool *upDown;
+	bool *downDown;
+	bool *leftDown;
+	bool *rightDown;
   public:
     static KeyPressInteractorStyle* New();
     vtkTypeMacro(KeyPressInteractorStyle, vtkInteractorStyleTrackballCamera);
 
-    void SetCamera(vtkSmartPointer<vtkCamera> c, vtkActorCollection * ac, std::vector<std::vector<Node*> > &nodes)
+    void SetCamera(vtkSmartPointer<vtkCamera> c, vtkActorCollection * ac, std::vector<std::vector<Node*> > &nodes, bool &up, bool &down, bool &left, bool &right)
     {
         Camera = c;
         actorCollection = ac;
         tempMaze = nodes;
+        upDown = &up;
+        downDown = &down;
+        leftDown = &left;
+        rightDown = &right;
     }
 
     //Handles Keypresses
     virtual void OnKeyPress()
     {
+        system("xset r off");
         // Get the keypress
         vtkRenderWindowInteractor *rwi = this->Interactor;
         std::string key = rwi->GetKeySym();
@@ -66,15 +75,10 @@ class KeyPressInteractorStyle : public vtkInteractorStyle/*vtkInteractorStyleTra
             angle = PI + angle;
         }
 
-        //std::cout << "BEFORE MOVEMENT\n";
-        std::cout << "Camera position: (" << xPosition << ", " << yPosition << ")." << std::endl;
-        //std::cout << "Focal position:  (" << xFocus << ", " << yFocus << ")." << std::endl;
-        //std::cout << "Look direction:  (" << xLook << ", " << yLook << ")." << std::endl;
-        //std::cout << "Angle:           " << angle << "\n" <<std::endl;
-
         // Handles the arrow keys and moves the Player accordingly
         if(key.compare("Up") == 0)
         {
+            *upDown = true;
             double newX = xPosition + MOVEINCREMENT*(xLook);
             double newY = yPosition + MOVEINCREMENT*(yLook);
             int row = -yPosition;
@@ -92,6 +96,7 @@ class KeyPressInteractorStyle : public vtkInteractorStyle/*vtkInteractorStyleTra
         }
         if(key.compare("Down") == 0)
         {
+            *downDown = true;
             double newX = xPosition - MOVEINCREMENT*(xLook);
             double newY = yPosition - MOVEINCREMENT*(yLook);
             int row = -yPosition;
@@ -109,10 +114,12 @@ class KeyPressInteractorStyle : public vtkInteractorStyle/*vtkInteractorStyleTra
         }
         if(key.compare("Right") == 0)
         {
+            *rightDown = true;
             angle -= ANGLEINCREMENT;
         }
         if(key.compare("Left") == 0)
         {
+            *leftDown = true;
             angle += ANGLEINCREMENT;
         }
 
@@ -130,40 +137,35 @@ class KeyPressInteractorStyle : public vtkInteractorStyle/*vtkInteractorStyleTra
         yPosition = p[1];
 
         Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
-/*
-        // Determine the current node in which we are located
-        int row = -yPosition;
-        int col = xPosition;
-        std::cout << "X: " << xPosition << " Y: " << yPosition << std::endl;
-        std::cout << "col: " << tempMaze[row][col]->getX() << " row: " << tempMaze[row][col]->getY() << std::endl;
-*/
-
-        // A test for camera roll
-        if (key.compare("h") == 0/* && Camera->GetRoll() == 0*/)
-        {
-            Camera->Roll(180);
-        }
-        /*else if (key.compare("P") == 0 && Camera->GetRoll() == PI)
-        {
-            Camera->SetRoll(0);
-        }*/
 
         this->Interactor->GetRenderWindow()->Render();
     }
 
-    virtual void OnKeyDown()
-    {
-        //std::cout << "Key Down" << std::endl;
-    }
-
-    virtual void OnKeyUp()
-    {
-        //std::cout << "Key Up" << std::endl;
-    }
-
     virtual void OnKeyRelease()
     {
+        system("xset r off");
         //std::cout << "Key Release" << std::endl;
+
+        // Get the keypress
+        vtkRenderWindowInteractor *rwi = this->Interactor;
+        std::string key = rwi->GetKeySym();
+
+        if(key.compare("Up") == 0)
+        {
+            *upDown = false;
+        }
+        if(key.compare("Down") == 0)
+        {
+            *downDown = false;
+        }
+        if(key.compare("Left") == 0)
+        {
+            *leftDown = false;
+        }
+        if(key.compare("Right") == 0)
+        {
+            *rightDown = false;
+        }
     }
 };
 

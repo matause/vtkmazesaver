@@ -13,7 +13,6 @@
 
 class vtkTimerCallback : public vtkCommand
 {
-
   public:
     static vtkTimerCallback *New()
     {
@@ -30,8 +29,21 @@ class vtkTimerCallback : public vtkCommand
         ++this->TimerCount;
         }
         //std::cout << this->TimerCount << endl;
-	moveCamera();
+	//moveCamera();
 	rotateActors();
+
+
+        if (*leftDown)
+            std::cout << "left down" << std::endl;
+        if (*rightDown)
+            std::cout << "right down" << std::endl;
+        if (*upDown)
+            std::cout << "up down" << std::endl;
+        if (*downDown)
+            std::cout << "down down" << std::endl;
+
+
+
         Interactor->GetRenderWindow()->Render();
     }
     void setMaze(std::vector<std::vector<Node*> > & m, std::vector<Node*> p)
@@ -42,7 +54,7 @@ class vtkTimerCallback : public vtkCommand
         for(int x = 0; x < maze[y].size(); x++)
           if(maze[y][x]->checkPolyhedron())
             rotators.push_back(maze[y][x]->getPolyhedron());
-      
+
     }
     void clearVisit()
     {
@@ -50,10 +62,14 @@ class vtkTimerCallback : public vtkCommand
 		for(int x = 0; x < maze[y].size(); x++)
 			maze[y][x]->unvisit();
     }
-    void setCamera(vtkSmartPointer<vtkCamera> & c, vtkSmartPointer<vtkRenderWindowInteractor> & r)
+    void setCamera(vtkSmartPointer<vtkCamera> & c, vtkSmartPointer<vtkRenderWindowInteractor> & r, bool &up, bool &down, bool &left, bool &right)
     {
-      Camera = c;
-      Interactor = r;
+        Camera = c;
+        Interactor = r;
+        upDown = &up;
+        downDown = &down;
+        leftDown = &left;
+        rightDown = &right;
     }
     void moveCamera()
     {
@@ -109,7 +125,7 @@ class vtkTimerCallback : public vtkCommand
 		Camera->Roll(1);
 		return;
 		}
-	
+
 	//Go East
 	if(current->getX() < next->getX() && fabs(yPosition - (double)-row) < TOLERANCE)
 	{
@@ -129,7 +145,7 @@ class vtkTimerCallback : public vtkCommand
 	}
 	//Go South
 	else if((current->getY() < next->getY()) && fabs(xPosition - current->getX()) < TOLERANCE)
-	{	
+	{
 		if((fabs(xFocus - (double)next->getX()) < TOLERANCE) && -current->getY() > yFocus)
 		{
 			//std::cout << "Move South\n";
@@ -230,6 +246,10 @@ std::cout <<		"Roll" << std::endl;
     std::vector <vtkSmartPointer<vtkActor> > rotators;
     vtkSmartPointer<vtkCamera> Camera;
     vtkSmartPointer<vtkRenderWindowInteractor> Interactor;
+    bool *upDown;
+	bool *downDown;
+	bool *leftDown;
+	bool *rightDown;
 
 };
 
