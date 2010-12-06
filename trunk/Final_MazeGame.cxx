@@ -60,13 +60,14 @@ Command Line Arguments:
 #include <vector>
 #include <stack>
 #include <math.h>
+#include <stdlib.h>
 
 #include "Node.h"
 #include "KeyboardInteractor.h"
 #include "vtkTimerCallback.h"
 
-#define WindowX 800
-#define WindowY 600
+#define WindowX 200
+#define WindowY 200
 
 #define ROWS 10
 #define COLUMNS 10
@@ -505,7 +506,7 @@ void astar(std::vector<std::vector<Node*> > & maze, Node * Start, Node * End)
 }
 
 	std::vector <Node *> DepthFirst(std::vector<std::vector<Node*> > & maze, Node * start, int endx, int endy)
-	{	
+	{
 		std::vector <Node *> path;
 		clearVisit(maze);
 		Node * current = start;
@@ -534,7 +535,7 @@ void astar(std::vector<std::vector<Node*> > & maze, Node * Start, Node * End)
 		if(next->visited() == true || next == NULL && current->getParent() != NULL)
 			current = current->getParent();
 		else
-		{	
+		{
 			current->setChild(next);
 			next->setParent(current);
 			current = next;
@@ -757,6 +758,13 @@ for(int j = 0; j < COLUMNS; j++)
 		std::cout << endl;
 	}
 */
+    system("xset r on");
+
+    bool upDown = false;
+    bool downDown = false;
+    bool leftDown = false;
+    bool rightDown = false;
+
 std::vector <Node*> path = DepthFirst(maze, maze[0][0], COLUMNS-1, ROWS-4);
 astar(maze, maze[0][0], maze[ROWS-1][COLUMNS-4]);
 std::cout << "Shortest Path\n";
@@ -783,7 +791,7 @@ std::cout << "DFP: " << path.size() << std::endl;
 //Keyboard Style
   vtkSmartPointer<KeyPressInteractorStyle> keystyle =
 	    vtkSmartPointer<KeyPressInteractorStyle>::New();
-  keystyle->SetCamera(camera, actorCollection, maze);
+  keystyle->SetCamera(camera, actorCollection, maze, upDown, downDown, leftDown, rightDown);
   renderWindowInteractor->SetInteractorStyle(keystyle);
 
   vtkSmartPointer<vtkInteractorStyleTrackballCamera> style =
@@ -813,7 +821,7 @@ std::cout << "DFP: " << path.size() << std::endl;
     vtkSmartPointer<vtkTimerCallback>::New();
   renderWindowInteractor->AddObserver(vtkCommand::TimerEvent, cb); //PUT THIS LINE BACK IN FOR AUTOMATED MOTION
   cb->setMaze(maze, path);
-  cb->setCamera(camera, renderWindowInteractor);
+  cb->setCamera(camera, renderWindowInteractor, upDown, downDown, leftDown, rightDown);
   int timerId = renderWindowInteractor->CreateRepeatingTimer(1);
   std::cout << "timerId: " << timerId << std::endl;
 
@@ -822,6 +830,7 @@ std::cout << "DFP: " << path.size() << std::endl;
   renderWindow->Render();
   renderWindowInteractor->Start();
 
+  system("xset r on");
   return EXIT_SUCCESS;
 }
 
