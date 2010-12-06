@@ -57,7 +57,7 @@ class vtkTimerCallback : public vtkCommand
     }
     void moveCamera()
     {
-	if( (fabs(Camera->GetRoll()) - 90) > TOLERANCE)
+	if( fabs(fabs(Camera->GetRoll()) - 90) > TOLERANCE)
 		return;
         double * p = Camera->GetPosition();
         double xPosition = p[0];
@@ -143,8 +143,6 @@ class vtkTimerCallback : public vtkCommand
 			else
 				angle += ANGLESPEED;
 		        Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
-			xFocus = xPosition + cos(angle);
-			yFocus = yPosition + sin(angle);
 		}
 	}
 	//Go West
@@ -185,8 +183,6 @@ class vtkTimerCallback : public vtkCommand
 			else
 				angle += ANGLESPEED;
 		        Camera->SetFocalPoint(xPosition + cos(angle), yPosition + sin(angle), 0);
-			xFocus = xPosition + cos(angle);
-			yFocus = yPosition + sin(angle);
 
 		}
 	}
@@ -196,15 +192,25 @@ class vtkTimerCallback : public vtkCommand
 	//std::cout << (current->getY() > next->getY()) << " " << (-yPosition > (double)row) << " " << ( fabs(xPosition - col) < TOLERANCE) << " " << ( xPosition != (double) col) <<"\n";
 	}
         //std::cout << Camera->GetFocalPoint(.erase(openlist.begin())[0] << "," << Camera->GetFocalPoint()[1] << std::endl;
-      
+
+     if(Camera->GetRoll() > 10)
+	{
+	Camera->SetRoll((double)90 -.00001);
+	}
+     else
+ 	Camera->SetRoll((double)-90 + .00001);
+
     }
+
     void rotateActors()
     {
         double * p = Camera->GetPosition();
         double xPosition = p[0];
         double yPosition = p[1];
-	if( (fabs(Camera->GetRoll()) - 90) > TOLERANCE)
+	std::cout << Camera->GetRoll() << " " <<(fabs(Camera->GetRoll()) - 90) << std::endl;
+	if( fabs((fabs(Camera->GetRoll()) - 90)) > TOLERANCE)
 	{
+std::cout <<		"Roll" << std::endl;
 		Camera->Roll(1);
 	}
       for(int i = 0; i < rotators.size(); i++)
@@ -212,7 +218,6 @@ class vtkTimerCallback : public vtkCommand
 	if(fabs(xPosition - rotators[i]->GetPosition()[0]) < TOLERANCE && fabs(yPosition - rotators[i]->GetPosition()[1]) < TOLERANCE)
 		{
 			rotators[i]->SetPosition(-10,10,-10);
-			rotators.erase(rotators.begin() + i);
 			Camera->Roll(1);
 		}
         rotators[i]->RotateZ(1);
