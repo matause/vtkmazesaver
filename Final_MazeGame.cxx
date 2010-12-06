@@ -318,11 +318,11 @@ std::vector <Node*> generateMaze2(std::vector<std::vector<Node*> > & maze)
 	    polyhedronCol[i] = (int)vtkMath::Random(1.0, (COLUMNS - 1) * modifier);
 	    std::cout << polyhedronCol[i] << ", " << polyhedronRow[i] << std::endl;
 	}
-	// RIGGED!
+	/*// RIGGED!
 	polyhedronRow[0] = 1;
     polyhedronCol[0] = 0;
     polyhedronRow[1] = 0;
-    polyhedronCol[1] = 1;
+    polyhedronCol[1] = 1;*/
 
 	while(visited < total)
 	{
@@ -821,7 +821,7 @@ std::cout << "DFP: " << path.size() << std::endl;
     vtkSmartPointer<vtkTimerCallback>::New();
   renderWindowInteractor->AddObserver(vtkCommand::TimerEvent, cb); //PUT THIS LINE BACK IN FOR AUTOMATED MOTION
   cb->setMaze(maze, path);
-  cb->setCamera(camera, renderWindowInteractor, upDown, downDown, leftDown, rightDown);
+  cb->setCamera(camera, renderWindowInteractor, upDown, downDown, leftDown, rightDown, maze);
   int timerId = renderWindowInteractor->CreateRepeatingTimer(1);
   std::cout << "timerId: " << timerId << std::endl;
 
